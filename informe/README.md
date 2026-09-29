@@ -23,11 +23,15 @@ paquete institucional y folio inferior derecho. El resumen usa numeración
 romana y el cuerpo, arábiga. No se copiaron dedicatoria, índices ni texto del
 manual de la plantilla porque no forman parte de este informe de asignatura.
 
-El PDF compilado tiene **siete páginas físicas**: portada, cinco páginas de
-contenido (resumen y cuatro de cuerpo) y una de referencias. La portada se
+El informe se titula **Programación de cirugías electivas mediante búsqueda
+tabú y selección adaptativa de movimientos** y lleva fecha **2 de octubre de
+2026**. El PDF tiene **siete páginas físicas**:
+portada, cinco páginas de contenido (resumen y cuatro de cuerpo) y una de
+referencias. La conclusión ocupa una página propia y menos de la mitad de ella.
+La portada se
 trata como preliminar institucional aparte del límite de cinco páginas de
 contenido de la pauta, según la decisión del equipo en este chat. El resumen
-contiene 195 palabras, dentro del rango de 150–200.
+contiene 194 palabras, dentro del rango de 150–200.
 
 ## Compilación
 

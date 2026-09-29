@@ -5,13 +5,14 @@ compilado prevalecen si hubiera alguna diferencia.
 
 | Requisito de la pauta | Ubicación en `main.tex` |
 |---|---|
-| Resumen de 150–200 palabras y palabras clave | Resumen preliminar (195 palabras) |
+| Resumen de 150–200 palabras y palabras clave | Resumen preliminar (194 palabras) |
 | Motivación, problema, pregunta y objetivo | Introducción |
 | Síntesis de 3–6 estudios relacionados | Párrafo comparativo en la introducción (seis estudios) |
 | Gancho de la arquitectura híbrida | Propuesta metodológica: selección online de movimientos con D-MAB |
 | Componentes MH, ML, datos y orquestación offline/online | Subsecciones 2.2, 2.3 y 2.4 |
-| Métricas, baselines, ablación y criterio de parada | Subsecciones 2.1–2.4 y cuadro 1 |
-| Conclusión y referencias | Secciones finales |
+| Métricas, baselines, ablación y criterio de parada | Subsecciones 2.1–2.4 y tabla 1 |
+| Datos sensibles y recursos de cómputo | Subsección 2.4: datos sintéticos, número de corridas y evaluaciones, tiempo mediano |
+| Conclusión y referencias | Conclusión en página propia (menos de media página) y sección de referencias |
 | Extensión máxima de cinco páginas de contenido | Cinco páginas de contenido; portada institucional y referencias aparte |
 
 El documento carga directamente `pucv_inf_2024.sty`, la portada de

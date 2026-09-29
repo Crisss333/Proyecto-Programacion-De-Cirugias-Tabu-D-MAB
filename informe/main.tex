@@ -9,10 +9,13 @@
 \renewcommand{\thesection}{\arabic{section}}
 \renewcommand{\thesubsection}{\thesection.\arabic{subsection}}
 \renewcommand{\thetable}{\arabic{table}}
+\captionsetup[table]{name=Tabla}
 \setlength{\headheight}{14pt}
 
 \begin{document}
+\hypersetup{pageanchor=false}
 \input{Portadas/portada_principal}
+\hypersetup{pageanchor=true}
 
 \pagenumbering{roman}
 \chapter*{Resumen}
@@ -27,8 +30,8 @@ sin relajar las restricciones clínicas y operativas.
 Proponemos una búsqueda tabú para explorar intercambios, inserciones y
 cambios de sala. Un bandido multibrazo dinámico (D-MAB) aprende durante la
 corrida qué movimiento conviene proponer a partir de las mejoras observadas;
-un detector de cambios reinicia sus estimaciones si el rendimiento cae. Las
-Un planificador estricto repara y evalúa las soluciones.
+un detector de cambios reinicia sus estimaciones si el rendimiento cae. Un
+planificador estricto repara y evalúa las soluciones.
 La comparación incluye Tabu con selección uniforme, una ablación sin detector
 y tres reglas constructivas, con igual presupuesto de evaluaciones.
 
@@ -98,39 +101,27 @@ para evitar comparaciones impropias con puntajes históricos.
 
 \section{Propuesta metodológica}
 \subsection{Problema, decisiones y decodificación}
-Sea $J$ el conjunto de pacientes. Una solución propuesta
-$S=(\pi,\rho^{A},\rho^{C})$ incluye una permutación $\pi$ y una sala
-elegible para anestesia y otra, potencialmente distinta, para cirugía de
-cada paciente. El planificador asigna personal elegible y ubica cada etapa
-en el primer instante compatible con la disponibilidad de sala y profesional.
-Para el paciente $j$, sean $F^A_j$ el fin de anestesia incluida su limpieza,
-$T^C_j$ el inicio efectivo de cirugía y $F^C_j$ el fin de cirugía incluida
-su limpieza. Definimos
+Sea $J$ el conjunto de pacientes. Una propuesta
+$S=(\pi,\rho^{A},\rho^{C})$ fija el orden $\pi$ y las salas preferidas
+$\rho^{A}$ y $\rho^{C}$ para anestesia y cirugía. Un planificador asigna
+personal elegible y ubica cada etapa según los recursos disponibles. La
+espera y el makespan se definen con el límite estricto:
 \begin{equation}
   W_j=\max\{0,T^C_j-F^A_j\},\qquad
   0\leq W_j\leq L_j,\qquad
   C_{\max}=\max_{j\in J}F^C_j,
   \label{eq:restricciones}
 \end{equation}
-donde $L_j$ es la espera máxima de la instancia. El límite se verifica como
-\emph{restricción dura}: una propuesta que lo viola no puede ser la mejor
-solución. Además se exige elegibilidad y ausencia de superposición de salas
-y profesionales. Cuando las etapas usan salas distintas, la sala y el
-profesional de anestesia permanecen ocupados hasta $T^C_j$; si comparten
-sala, ésta sigue ocupada durante la cirugía y limpieza. $W_j$ mide la espera
-entre etapas usada como \emph{proxy} de bloqueo, no toda la indisponibilidad
-de un quirófano.
+\noindent Aquí $j\in J$ es un paciente; $F^A_j$ y $F^C_j$, los fines de
+anestesia y cirugía con limpieza; $T^C_j$, el inicio de cirugía; $W_j$, la
+espera; $L_j$, su límite estricto, y $C_{\max}$, el fin de la última
+cirugía. Salas y profesionales deben ser elegibles y no superponerse. La
+sala de anestesia sigue ocupada hasta el traslado si las salas difieren.
 
-La codificación de claves aleatorias genera preferencias de orden y de dos
-salas por paciente. Un decodificador repara esas preferencias: si el paciente
-preferido no es programable en ese momento, prueba los siguientes; para el
-elegido busca un par de salas factible que se aparte lo menos posible de las
-preferencias. El personal se asigna de manera voraz entre los elegibles.
-Por ello el movimiento solicitado puede convertirse en otra solución tras
-la reparación. El espacio realmente explorado depende de este decodificador
-y no comprende necesariamente todos los calendarios factibles. A diferencia
-del piloto inicial, no se fuerza equilibrio entre pabellones ni la misma sala
-para ambas etapas.
+Las claves aleatorias codifican orden y salas. El decodificador pospone
+pacientes no programables y repara salas incompatibles; así puede modificar
+movimientos y limitar los calendarios alcanzables. No fuerza equilibrio ni
+sala común entre etapas.
 
 Minimizamos el criterio fijado antes de la validación,
 \begin{equation}
@@ -138,90 +129,65 @@ Minimizamos el criterio fijado antes de la validación,
        +0{,}5\sum_{j\in J}W_j+1{,}4\max_{j\in J}W_j,
   \label{eq:objetivo}
 \end{equation}
-donde $t_o^{\mathrm{ini}}$ es el inicio de reserva del recurso para
-cada operación, incluida la preparación. El término $10^{-6}$ desempata
-soluciones próximas. Reportamos $C_{\max}$ y las esperas por separado: una
-mejora de $f$ no implica que todas sus componentes disminuyan. La
-presentación docente considera también equilibrio de carga
-\parencite{lara2026}; lo excluimos porque una asignación desigual puede
-minimizar mejor el tiempo y la espera. Por tanto, $f$ no equivale al puntaje
-histórico del taller.
+\noindent En \eqref{eq:objetivo}, $f(S)$ es el objetivo; $o$ recorre las
+operaciones y $t_o^{\mathrm{ini}}$ es su inicio de reserva. $C_{\max}$, $J$
+y $W_j$ se definieron en \eqref{eq:restricciones}. $10^{-6}$ desempata;
+$0{,}5$ y $1{,}4$ ponderan espera total y máxima. No se penaliza el
+desequilibrio de salas porque podría favorecer el tiempo y la espera. Así,
+$f$ difiere del puntaje del taller \parencite{lara2026}.
 
 \subsection{Componente metaheurístico: búsqueda tabú}
-La búsqueda comienza desde la mejor de treinta soluciones evaluadas con el
-mismo planificador: FIFO, SPT, LPT y veintisiete generadas por claves
-aleatorias. Las reglas clásicas forman parte de la inicialización, de modo
-que superarlas al final está garantizado por construcción y no demuestra por
-sí solo el aporte de Tabu o D-MAB. En cada ronda se generan quince candidatos
-distintos mediante cinco tipos de movimiento: intercambiar dos pacientes,
-extraer e insertar uno en otra posición, cambiar su sala de anestesia,
-cambiar la de cirugía o cambiar ambas. Con probabilidad $0{,}65$ se elige un
-paciente entre los tres con mayor espera actual; en otro caso se elige del
-conjunto completo. El sesgo concentra parte de la búsqueda donde hay
-congestión, sin impedir exploración global.
-
-La memoria tabú conserva las últimas siete soluciones para desincentivar
-retornos. Una aspiración permite aceptar una solución tabú si mejora el
-mejor valor global. El estado local puede empeorar para salir de una zona de
-búsqueda, pero el mejor calendario observado se guarda por separado. Las
-tres políticas comparadas comparten exactamente estos movimientos, la
-reparación, las soluciones iniciales y un máximo de $3.030$ evaluaciones
-estrictas, incluidas las treinta iniciales.
+Se inicia con la mejor de treinta soluciones: FIFO, SPT, LPT y veintisiete
+órdenes aleatorios. Cada ronda genera quince vecinos por intercambio,
+inserción o cambio de una o ambas salas; se priorizan pacientes con mayor
+espera ($p=0{,}65$). La memoria tabú evita las siete soluciones recientes,
+salvo mejora global. Las políticas comparten
+inicio, movimientos y planificador, con $3.030$ evaluaciones estrictas,
+incluidas las treinta iniciales.
 
 \subsection{Componente de aprendizaje y flujo}
-El aprendizaje se realiza \emph{online} en cada corrida, sin entrenamiento
-previo ni un modelo contextual. Antes de generar cada candidato, D-MAB
-escoge un movimiento $a$ mediante el índice UCB1
+El aprendizaje ocurre \emph{online}, sin entrenamiento previo ni variables
+contextuales. Antes de cada candidato, D-MAB elige un movimiento con UCB1:
 \begin{equation}
   a^*=\arg\max_a\left(\bar r_a+
       \sqrt{\frac{2\ln(\sum_b n_b)}{n_a}}\right),
   \label{eq:ucb}
 \end{equation}
-tras probar inicialmente cada brazo. Aquí $n_a$ es su número de observaciones
-y $\bar r_a$ su recompensa media. Después de evaluar el candidato se entrega
-una recompensa en $[0,1]$:
+\noindent En \eqref{eq:ucb}, $a^*$ es el movimiento elegido; $a$ y $b$ recorren
+los cinco movimientos; $n_a$ y $n_b$ cuentan sus elecciones, y $\bar r_a$
+es la recompensa media de $a$. Se prueba cada movimiento antes de aplicar
+UCB1. La recompensa se calcula como
 \begin{equation}
   r_a=\min\!\left\{1,
     \frac{\max\{0,f(S_{\mathrm{local}})-f(S_{\mathrm{cand}})\}}
          {\max\{1,0{,}02 f(S_{\mathrm{inicial}})\}}\right\}.
   \label{eq:recompensa}
 \end{equation}
-La referencia local se fija al comienzo del lote de quince candidatos. Una
-propuesta duplicada recompensa con cero al bandido, aunque no consume una
-evaluación estricta. Page--Hinkley detecta caídas de recompensa por brazo
-con $\delta=0{,}01$ y umbral $\lambda=0{,}35$; cuando dispara, reinicia
-las estimaciones de \emph{todos} los movimientos, pero conserva la solución,
-la memoria tabú y el mejor valor. D-MAB aprende qué \emph{propuesta más
-reparación} fue útil; no diagnostica directamente un óptimo local.
+\noindent En \eqref{eq:recompensa}, $r_a\in[0,1]$ es la recompensa;
+$S_{\mathrm{local}}$ es el estado al iniciar el lote de quince candidatos,
+$S_{\mathrm{cand}}$ el candidato y $S_{\mathrm{inicial}}$ el inicio. $f$ es
+el objetivo de \eqref{eq:objetivo}. Se premian mejoras normalizadas; un
+duplicado recibe cero sin gastar evaluación estricta. Page--Hinkley detecta
+caídas con $\delta=0{,}01$ y umbral $\lambda=0{,}35$; reinicia estimaciones,
+pero conserva la solución y la memoria tabú.
 
-El flujo \emph{offline} consiste en verificar instancias, definir función
-objetivo, parámetros, baselines y semillas. En línea se repite: seleccionar
-movimiento, generar vecino, reparar, comprobar factibilidad, evaluar,
-actualizar bandido y estado tabú. Como ablación, UCB1 usa la misma selección
-sin Page--Hinkley; Tabu mixto selecciona uno de los cinco movimientos con
-probabilidad uniforme. Así la comparación principal estima el efecto de la
-selección aprendida y la ablación aísla el reinicio dinámico.
+Fuera de línea se fijan instancias, parámetros, métricas y semillas. En línea
+se selecciona, genera, repara y evalúa el vecino, y se actualizan bandido y
+Tabu. La ablación UCB1 omite Page--Hinkley; Tabu mixto elige movimientos
+uniformemente. El bandido aprende la utilidad de la \emph{propuesta reparada},
+sin diagnosticar directamente un óptimo local.
 
 \subsection{Datos, evaluación y alcance de la evidencia}
-El catálogo contiene doce instancias sintéticas en YAML: tres réplicas
-de cada tamaño, con 15, 20, 25 y 30 cirugías. Se verifican
-esquema y hashes, y se registran tamaño, salas, personal, duraciones y límites
-de espera. Son características descriptivas para análisis posterior, no
-entradas del bandido. Al crecer el número de cirugías también crecen los
-recursos, por lo que una curva agrupada por tamaño no aísla el efecto del
-número de pacientes. Ninguna instancia contiene datos clínicos reales.
-
-El piloto usó semillas $0$--$19$ para fijar la arquitectura. La validación
-emparejada usó semillas $20$--$39$ en \emph{las mismas doce instancias}: tres
-políticas por instancia y semilla, $720$ corridas y $2.181.600$
-evaluaciones estrictas presupuestadas. Comparamos diferencias por pareja
-instancia--semilla, además de medianas de objetivo, makespan, espera total y
-máxima, porcentaje factible, tiempo y curvas de convergencia ilustrativas.
-La mediana del tiempo por corrida fue cercana a $0{,}9$ segundos. Una
-reejecución de 36 corridas reconstruyó calendarios factibles y reprodujo los
-valores guardados. La comparación frente a FIFO, SPT y LPT se muestra como
-referencia constructiva, con la salvedad de que estas reglas ya siembran la
-búsqueda.
+Usamos doce instancias YAML sintéticas, tres de cada tamaño: 15, 20, 25 y 30
+cirugías. Se verifican esquema y hashes, y se registran recursos, duraciones
+y límites de espera. Son datos descriptivos, no entradas del bandido; no hay
+datos clínicos. Las semillas $0$--$19$ fijaron el piloto; $20$--$39$ validan
+en \emph{las mismas instancias}: tres políticas por pareja, $720$ corridas y
+$2.181.600$ evaluaciones presupuestadas. Se miden objetivo, makespan,
+esperas, factibilidad, tiempo y convergencia. La mediana fue cercana a
+$0{,}9$ segundos por corrida; 36 calendarios reejecutados fueron factibles
+y reprodujeron los valores. FIFO, SPT y LPT también siembran Tabu:
+superarlas no prueba por sí solo el beneficio del aprendizaje.
 
 \begin{table}[ht]
   \centering
@@ -238,42 +204,33 @@ búsqueda.
   \end{tabular}
 \end{table}
 
-El efecto de D-MAB cambia de signo entre instancias y la mediana de sus doce
-diferencias medianas respecto de Tabu mixto es aproximadamente cero. La
-ablación directa tampoco muestra una ventaja consistente del reinicio
-Page--Hinkley. El bloqueo total mediano fue cero en todas las instancias y
-políticas; este catálogo discrimina poco en esa métrica y las diferencias
-provienen principalmente del makespan. Las semillas nuevas permiten estudiar
-la variación aleatoria del algoritmo \emph{dentro del catálogo conocido},
-pero no prueban generalización a instancias no vistas ni optimalidad global.
-Como siguiente prueba se requieren instancias sintéticas de estrés con más
-congestión y un conjunto de instancias reservado antes de ajustar parámetros.
+La tabla \ref{tab:resultados} no muestra ventaja consistente de D-MAB: el
+efecto cambia de signo entre instancias y la ablación no favorece al detector.
+La espera mediana fue cero en todas las políticas, por lo que el catálogo
+distingue poco el bloqueo. Las semillas nuevas no equivalen a instancias
+nuevas; igualar evaluaciones tampoco iguala tiempo ni intentos duplicados.
+La reparación puede cambiar el movimiento elegido. No se infiere
+superioridad general ni optimalidad; faltan intervalos agrupados por
+instancia y escenarios más congestionados.
 
-\noindent\textbf{Amenazas de validez y trabajo siguiente.} El presupuesto
-igualado cuenta llamadas al planificador estricto, no propuestas repetidas ni
-segundos de procesador. En efecto, una propuesta duplicada puede actualizar
-el bandido con recompensa cero sin gastar una evaluación, y la política
-uniforme no registra ese intento con la misma granularidad. La reparación
-puede modificar el movimiento escogido; por tanto, una preferencia aprendida
-por un brazo refleja la utilidad de proponerlo \emph{junto con} su reparación,
-no el efecto puro de una operación de vecindario. Una evaluación posterior
-deberá registrar tasas de reparación, elecciones y recompensas por operador,
-y comparar además presupuestos de tiempo. También se requieren intervalos de
-incertidumbre agrupados por instancia: las veinte semillas de una misma
-réplica comparten los datos y no constituyen veinte problemas independientes.
-Finalmente, nuevas instancias con esperas más exigentes permitirán observar
-si el componente aprendido aporta valor precisamente donde hay riesgo de
-bloqueo.
-
+\clearpage
 \section{Conclusión}
-El problema exige coordinar secuencia, salas y personal sin violar la espera
-máxima entre anestesia y cirugía. La propuesta combina Tabu Search con D-MAB
-para escoger movimientos según la recompensa observada durante cada corrida.
-La validación inicial no demuestra superioridad general del controlador y
-señala que el catálogo actual apenas discrimina bloqueo. El valor de la
-arquitectura reside en que deja aislado y reproducible el efecto del
-aprendizaje; las siguientes entregas deberán probarlo en instancias no
-observadas y con mayor congestión.
+La programación de cirugías electivas requiere coordinar el orden de los
+pacientes, las salas y el personal, respetando la espera máxima entre
+anestesia y cirugía. El problema de investigación es decidir si aprender
+durante la búsqueda qué movimiento conviene proponer aporta más que una
+selección fija o uniforme. La arquitectura integra búsqueda tabú, que
+explora calendarios factibles, con D-MAB, que asigna movimientos según sus
+recompensas recientes y reinicia sus estimaciones ante una caída detectada.
+
+La validación preliminar ofrece un resultado acotado: D-MAB mejora algunas
+corridas y empeora otras, sin ventaja consistente en las doce instancias
+conocidas. Además, la escasa espera observada dificulta medir su posible
+aporte frente al bloqueo. El valor de esta entrega es una comparación
+reproducible que separa el efecto de la selección aprendida del reinicio
+dinámico y explicita sus límites. Las próximas pruebas deberán usar instancias
+reservadas, mayor congestión, análisis de incertidumbre por instancia y
+presupuestos tanto de evaluaciones como de tiempo.
 
 \clearpage
 \printbibliography[title={Referencias}]
