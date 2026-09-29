@@ -1,251 +1,280 @@
-% Informe de Entrega 1, OII464.
-% Formato breve basado en la plantilla PUCV 2024: carta, 12 pt, Times,
-% márgenes de 2.5 cm, interlineado sencillo, sangría de 1 cm,
-% 10 pt entre párrafos y folio inferior derecho.
-\documentclass[12pt,letterpaper]{article}
-\usepackage[utf8]{inputenc}
-\usepackage[T1]{fontenc}
+% Primer informe OII464. Se usa el paquete y la portada oficiales de la
+% Escuela de Ingeniería Informática PUCV, facilitados para este proyecto.
+\documentclass[12pt,letterpaper]{report}
 \usepackage[spanish,es-nodecimaldot]{babel}
-\usepackage[margin=2.5cm]{geometry}
-\usepackage{times}
-\usepackage{microtype}
-\usepackage{amsmath,amssymb}
-\usepackage{booktabs}
-\usepackage{array}
-\usepackage{fancyhdr}
-\usepackage{titlesec}
-\usepackage[round,authoryear]{natbib}
+\usepackage{pucv_inf_2024}
+\usepackage{amssymb,booktabs,array,microtype,csquotes}
 \usepackage[hidelinks]{hyperref}
-\setlength{\parindent}{1cm}
-\setlength{\parskip}{10pt}
-\renewcommand{\baselinestretch}{1}
-\titleformat{\section}{\normalfont\bfseries\large}{\thesection.}{0.5em}{}
-\titleformat{\subsection}{\normalfont\bfseries\normalsize}{\thesubsection.}{0.5em}{}
-\titlespacing*{\section}{0pt}{7pt}{1pt}
-\titlespacing*{\subsection}{0pt}{5pt}{0pt}
-\pagestyle{fancy}
-\fancyhf{}
-\fancyfoot[R]{\thepage}
-\renewcommand{\headrulewidth}{0pt}
+\addbibresource{referencias.bib}
+\renewcommand{\thesection}{\arabic{section}}
+\renewcommand{\thesubsection}{\thesection.\arabic{subsection}}
+\renewcommand{\thetable}{\arabic{table}}
 \setlength{\headheight}{14pt}
-\newcommand{\autores}{José Basualto, Cristopher Dauros y Carlos Ruz}
 
 \begin{document}
-\begin{center}
-{\small Pontificia Universidad Católica de Valparaíso\\
-Escuela de Ingeniería Informática\\
-OII464: Desarrollo de Diseños Híbridos para Optimización}\\[8pt]
-{\Large\bfseries Selección adaptativa de movimientos en Tabu Search\\
-para la programación de cirugías electivas}\\[7pt]
-{\normalsize \autores}\\[3pt]
-{\small Primer informe --- 30 de septiembre de 2026}
-\end{center}
-\vspace{-5pt}
+\input{Portadas/portada_principal}
 
-\begin{abstract}
-\noindent
-La programación de cirugías electivas exige ordenar pacientes y coordinar
-quirófanos, anestesiólogos y cirujanos en dos etapas sujetas a tiempos de
-preparación, transición y limpieza. Una cirugía que no puede comenzar a tiempo
-tras la anestesia retiene recursos y puede exceder la espera máxima permitida.
-El problema combina decisiones discretas de secuenciación y asignación con
-restricciones temporales estrictas. Proponemos estudiar una búsqueda tabú
-integrada con un bandido multibrazo dinámico (D-MAB) que aprende durante cada
-corrida cuál de cinco movimientos conviene explorar: intercambio, inserción y
-tres cambios de sala. El aprendizaje utiliza la mejora observada de candidatos
-factibles; una prueba de cambio reinicia sus estimaciones cuando el rendimiento
-de los movimientos varía. El objetivo experimental prioriza el tiempo de
-terminación de la última cirugía y las esperas por bloqueo, sin imponer
-equilibrio artificial entre salas. La propuesta se contrastó preliminarmente en instancias
-sintéticas del curso con el mismo planificador, presupuesto y semillas para
-Tabu sin aprendizaje y Tabu con D-MAB. Se informan calidad, tiempo,
-factibilidad y robustez, junto con una ablación del mecanismo dinámico. El
-aporte esperado es evidencia reproducible sobre cuándo la selección adaptativa
-de movimientos resulta útil en este caso hospitalario.
-\end{abstract}
+\pagenumbering{roman}
+\chapter*{Resumen}
+La programación de cirugías electivas exige decidir el orden de los pacientes
+y coordinar quirófanos, anestesiólogos y cirujanos en dos etapas. Las salas
+pueden diferir entre anestesia y cirugía. La espera entre etapas debe
+respetar un máximo estricto. Una mala secuencia prolonga la jornada y retiene
+recursos.
+El desafío es reducir el tiempo de término de la última cirugía y esa espera
+sin relajar las restricciones clínicas y operativas.
+
+Proponemos una búsqueda tabú para explorar intercambios, inserciones y
+cambios de sala. Un bandido multibrazo dinámico (D-MAB) aprende durante la
+corrida qué movimiento conviene proponer a partir de las mejoras observadas;
+un detector de cambios reinicia sus estimaciones si el rendimiento cae. Las
+Un planificador estricto repara y evalúa las soluciones.
+La comparación incluye Tabu con selección uniforme, una ablación sin detector
+y tres reglas constructivas, con igual presupuesto de evaluaciones.
+
+Una validación preliminar con veinte semillas nuevas en doce instancias
+sintéticas produjo mejoras y empeoramientos de magnitud semejante: no
+demuestra una ventaja general del controlador. El bloqueo mediano fue cero,
+lo que limita la capacidad del catálogo para distinguir métodos en esa
+métrica. El aporte es un protocolo reproducible para estudiar cuándo
+conviene adaptar movimientos.
+
 \noindent\textbf{Palabras clave:} programación de cirugías; búsqueda tabú;
-selección adaptativa de operadores; bandido multibrazo; bloqueo.
-
-\section{Introducción}
-Una jornada de cirugías electivas debe usar salas y personal especializado sin
-superponer operaciones incompatibles. En el caso propuesto para OII464, cada
-paciente pasa por anestesia y cirugía; las salas elegibles, el personal, las
-duraciones y los tiempos de transición provienen de una instancia. Una mala
-secuencia puede retrasar el término de la jornada y dejar un quirófano ocupado
-mientras el paciente espera cirugía. Por ello interesa reducir el
-\emph{makespan}, o instante de finalización de la última operación, y las
-esperas por bloqueo, cumpliendo siempre el máximo de espera de cada paciente.
-El catálogo disponible contiene instancias \emph{sintéticas} en YAML, no
-registros clínicos ni los archivos JSON mencionados en la presentación del
-taller \citep{saicooh2026}.
-
-El repositorio docente facilita instancias y un planificador, pero sus
-algoritmos históricos y sus rutas de evaluación no comparten necesariamente
-el mismo tratamiento del límite de espera ni la misma función objetivo. Para
-estudiar el aporte de una arquitectura híbrida, las alternativas deben usar
-un único evaluador estricto, idénticas soluciones de partida y el mismo número
-de evaluaciones. Además, una mezcla fija de movimientos no puede responder a
-cambios en su utilidad durante la búsqueda. Nuestra pregunta es: \emph{¿mejora
-la selección online de movimientos mediante D-MAB la calidad y robustez de
-Tabu Search frente a una mezcla fija, bajo el mismo presupuesto y las mismas
-restricciones?} El objetivo es diseñar la comparación y establecer una
-implementación reproducible; una mejora general aún no está demostrada.
-
-La investigación relacionada ofrece fundamentos, pero no resuelve
-directamente esta comparación. \citet{akbarzadeh2024} modelan fases y recursos
-quirúrgicos con una heurística de dos niveles y predicción de factibilidad;
-\citet{yin2026} estudian Tabu con múltiples operadores en programación entre
-hospitales. La adaptación de movimientos ya cuenta con precedentes:
-\citet{yu2024} emplean Q-learning para seleccionar operadores en cirugía y
-\citet{niroumandrad2024} guían Tabu con clasificadores en planificación
-clínica. \citet{dacosta2008} introducen D-MAB, que combina selección tipo UCB
-con detección de cambios, aunque lo prueban en escenarios artificiales;
-\citet{dolatkhah2026} lo aplican a operadores de un algoritmo genético para
-quirófanos. En consecuencia, el aporte propuesto es \emph{evaluar} D-MAB
-dentro de Tabu en las instancias del curso, con espera máxima estricta y una
-comparación de recursos homogénea; no se reivindica la primera aplicación de
-aprendizaje a cirugías.
-
-\section{Propuesta metodológica}
-\subsection{Problema, factibilidad y objetivo}
-Sea \(J\) el conjunto de pacientes. Una solución
-\(S=(\pi,\rho_1,\rho_2)\) contiene una permutación \(\pi\) y una sala
-elegible para la anestesia y otra para la cirugía de cada paciente. Ambas
-salas pueden diferir. El planificador construye el calendario según la
-disponibilidad de salas y personal, respetando precedencias, preparación,
-transición y limpieza. Se acepta una solución solo si cada paciente satisface
-su límite de espera entre ambas operaciones. Esta condición se trata como
-\emph{restricción dura}, no como una penalización negociable.
-
-Minimizamos, en minutos,
-\begin{equation}
-f(S)=C_{\max}(S)+10^{-6}\!\sum_{o} t_o^{\mathrm{inicio}}
-      +0{,}5\!\sum_{j\in J}W_j+1{,}4\max_{j\in J}W_j ,
-\label{eq:objective}
-\end{equation}
-donde \(W_j\) es el intervalo entre el fin de anestesia, incluida su limpieza,
-y el inicio efectivo de cirugía; \(t_o^{\mathrm{inicio}}\) marca el inicio de
-ocupación del recurso, incluida la preparación. El término de inicios rompe
-empates de manera marginal. El \emph{makespan} se reporta
-por separado. La presentación docente contempla también una penalización de
-equilibrio de salas \citep{lara2026}; la excluimos porque una asignación desigual puede ser
-la mejor bajo las demás restricciones. Por tanto, nuestros valores de
-\(f\) no se equiparan con el puntaje histórico del repositorio.
-
-\subsection{Componentes y orquestación}
-La metaheurística es Tabu Search sobre las decisiones discretas de \(S\).
-Se construyen 30 soluciones iniciales: FIFO, SPT y LPT, junto con 27
-soluciones de claves aleatorias; se evalúan con el mismo planificador y la
-búsqueda comienza desde la mejor. Cada ronda considera 15 candidatos. Los
-cinco movimientos posibles son intercambio de pacientes, inserción,
-reasignación de sala de anestesia, de sala de cirugía o de ambas. Una memoria
-tabú de longitud siete desincentiva regresar a soluciones recientes; la
-aspiración admite un movimiento tabú cuando supera el mejor valor global.
-Ese mejor valor se conserva aunque una ronda acepte un empeoramiento local.
-
-El componente de aprendizaje es D-MAB \citep{dacosta2008}, adaptado a los
-cinco movimientos. \emph{Antes} de generar cada candidato, el controlador
-escoge uno con UCB1. Después de evaluarlo recibe una recompensa acotada a
-\([0,1]\), proporcional a la mejora positiva respecto de la solución local,
-y actualiza su estimación del movimiento escogido. Page--Hinkley detecta
-caídas en esa recompensa y reinicia las estimaciones para volver a explorar.
-Este mecanismo aprende \emph{online} dentro de cada corrida: no usa
-entrenamiento previo, no recibe las características de la instancia como
-vector contextual y no afirma reconocer directamente un óptimo local.
-
-\noindent\textbf{Flujo reproducible.}
-\emph{Offline}: seleccionar las instancias YAML, verificar su esquema,
-construir baselines y fijar parámetros, semillas y presupuesto.
-\emph{Online}: elegir movimiento \(\rightarrow\) generar candidato
-\(\rightarrow\) decodificar y comprobar factibilidad
-\(\rightarrow\) evaluar \(f\)
-\(\rightarrow\) actualizar D-MAB y el estado Tabu.
-El criterio de parada es 3.030 evaluaciones estrictas por corrida, incluidas
-las 30 iniciales. Se registran también tamaño, número de salas, duraciones y
-límites de espera para analizar diferencias entre instancias. Ninguna
-instancia sintética contiene datos de pacientes reales.
-
-\subsection{Plan de evaluación}
-La comparación principal enfrentará Tabu con mezcla uniforme de los mismos
-cinco movimientos y Tabu con D-MAB por candidato. FIFO, SPT y LPT serán
-referencias constructivas. Una ablación retirará Page--Hinkley, dejando UCB1,
-para estimar el aporte de la detección de cambios. Se usaron las doce
-instancias estándar, tres réplicas de 15, 20, 25 y 30 cirugías, y semillas
-emparejadas; las instancias con doce salas ampliarán el estudio de
-escalabilidad. Los parámetros se fijaron con las corridas exploratorias
-antes de ejecutar semillas nuevas de validación.
-
-Por instancia y método se reportan objetivo, \(C_{\max}\), bloqueo,
-factibilidad, tiempo y curvas de convergencia. Las diferencias se calculan
-por parejas instancia--semilla; no se tratan las corridas como instancias
-independientes. El mismo presupuesto y planificador aíslan el aporte del
-controlador.
-Tras el piloto con semillas 0--19, la validación con semillas 20--39 sobre
-las mismas doce instancias encontró diferencias de ambos signos y un efecto
-mediano entre instancias cercano a cero. El bloqueo mediano fue cero en todos
-los tamaños, así que el catálogo discrimina poco esa métrica. No se demuestra
-ventaja general ni generalización a casos no vistos. El riesgo de ajustar el
-controlador a las instancias observadas se reduce al fijar sus parámetros
-antes de validar con semillas nuevas.
-
-\section{Conclusión}
-Se propone Tabu Search para programar cirugías bajo restricciones estrictas de
-recursos y espera. D-MAB aprende online qué movimiento discreto conviene
-explorar. La comparación con el mismo evaluador y presupuesto, más una
-ablación, permitirá medir cuándo aporta valor. La evidencia actual se limita
-a este catálogo sintético.
+selección adaptativa de operadores; aprendizaje en línea; bloqueo.
 
 \clearpage
-\begin{thebibliography}{99}
-\raggedright
-\setlength{\itemsep}{4pt}
-\bibitem[Akbarzadeh y Maenhout(2024)]{akbarzadeh2024}
-Akbarzadeh, B. y Maenhout, B. (2024).
-A two-layer heuristic for patient sequencing in the operating room theatre
-considering multiple resource phases.
-\emph{Computers \& Operations Research, 170}, 106768.
-\href{https://doi.org/10.1016/j.cor.2024.106768}{doi:10.1016/j.cor.2024.106768}.
+\pagenumbering{arabic}
+\section{Introducción}
+En la programación intrajornada de cirugías electivas se asignan recursos
+compartidos a operaciones con precedencia. El caso docente de OII464 contiene
+una etapa de anestesia y otra de cirugía por paciente. Cada una tiene
+duración, preparación, transición, limpieza y conjuntos de salas y personal
+elegible. Si el quirófano de cirugía no está disponible al terminar la
+anestesia, la primera sala y su profesional pueden permanecer retenidos hasta
+el traslado. Una solución debe evitar superposiciones de recursos y respetar
+la espera máxima de cada paciente. Minimizar la suma de duraciones no
+representaría el problema: las duraciones son datos, mientras que el orden y
+las asignaciones determinan cuándo termina la jornada. Por eso examinamos el
+\emph{makespan} y, por separado, la espera entre etapas como indicador de
+bloqueo.
 
-\bibitem[DaCosta et~al.(2008)]{dacosta2008}
-DaCosta, L., Fialho, A., Schoenauer, M. y Sebag, M. (2008).
-Adaptive operator selection with dynamic multi-armed bandits.
-En \emph{Proceedings of GECCO} (pp. 913--920).
-\href{https://doi.org/10.1145/1389095.1389272}{doi:10.1145/1389095.1389272}.
+La presentación del taller propone integrar una metaheurística y mejorar
+reglas clásicas, además de reducir el makespan y evitar quirófanos bloqueados
+\parencite{lara2026}. Para estudiar una arquitectura híbrida hace falta una
+comparación controlada: cambiar a la vez la regla de factibilidad, la
+representación o el presupuesto impediría atribuir diferencias al componente
+de aprendizaje. También importa que los movimientos discretos no tengan la
+misma utilidad durante toda la búsqueda. Una mezcla fija de intercambio,
+inserción y cambios de sala no responde a esa variación; un controlador en
+línea podría hacerlo, aunque su exploración y sus reinicios pueden asimismo
+perjudicar una corrida. La pregunta es si D-MAB mejora \emph{de manera
+consistente} la calidad de Tabu Search frente a seleccionar los mismos
+movimientos uniformemente, manteniendo constantes el decodificador, el
+presupuesto y las soluciones iniciales.
 
-\bibitem[Dolatkhah et~al.(2026)]{dolatkhah2026}
-Dolatkhah, M., Hashemi Doulabi, H., Rei, W. y Gendreau, M. (2026).
-A reinforcement-learning-based column generation algorithm for integrated
-operating room planning and scheduling. \emph{arXiv:2604.22977}, preprint.
-\href{https://arxiv.org/abs/2604.22977}{arXiv:2604.22977}.
+Los trabajos relacionados motivan esta comparación, pero no la resuelven.
+\textcite{akbarzadeh2024} incorporan varias fases de recursos y predicción de
+factibilidad en secuenciación quirúrgica; \textcite{yin2026} usan búsqueda
+tabú con varios operadores entre hospitales. La elección aprendida de
+operadores también tiene precedentes: \textcite{yu2024} emplean
+Q-learning en programación y reprogramación de cirugías, mientras
+\textcite{niroumandrad2024} guían Tabu con clasificadores en otra tarea
+clínica. \textcite{dacosta2008} proponen D-MAB para selección adaptativa,
+combinando UCB1 y detección Page--Hinkley, y \textcite{dolatkhah2026} ya
+aplican D-MAB a operadores genéticos en planificación de quirófanos. Esos
+aportes impiden reivindicar como novedad general el uso de aprendizaje o de
+D-MAB en este dominio. La brecha concreta de nuestro estudio es evaluar su
+integración \emph{dentro de Tabu}, con espera máxima estricta, salas de ambas
+etapas independientes y una comparación emparejada sobre el caso del curso.
 
-\bibitem[Lara Arce(2026)]{lara2026}
-Lara Arce, J. (2026). \emph{Presentación Hospitales: Optativo}
-[material de clase, OII464, 7 de septiembre].
+El objetivo de esta primera entrega es especificar la representación, los
+componentes metaheurístico y de aprendizaje, su interacción y un protocolo
+reproducible para medir calidad, tiempo y robustez. El repositorio docente
+\parencite{saicooh2026} aporta contexto y datos sintéticos; se trabajó en un
+repositorio independiente. La presentación menciona cuatro archivos JSON,
+pero los experimentos disponibles aquí usan doce instancias YAML de la copia
+local del catálogo. Esta distinción y la función objetivo exacta se declaran
+para evitar comparaciones impropias con puntajes históricos.
 
-\bibitem[Niroumandrad et~al.(2024)]{niroumandrad2024}
-Niroumandrad, N., Lahrichi, N. y Lodi, A. (2024).
-Learning tabu search algorithms: A scheduling application.
-\emph{Computers \& Operations Research, 170}, 106751.
-\href{https://doi.org/10.1016/j.cor.2024.106751}{doi:10.1016/j.cor.2024.106751}.
+\section{Propuesta metodológica}
+\subsection{Problema, decisiones y decodificación}
+Sea $J$ el conjunto de pacientes. Una solución propuesta
+$S=(\pi,\rho^{A},\rho^{C})$ incluye una permutación $\pi$ y una sala
+elegible para anestesia y otra, potencialmente distinta, para cirugía de
+cada paciente. El planificador asigna personal elegible y ubica cada etapa
+en el primer instante compatible con la disponibilidad de sala y profesional.
+Para el paciente $j$, sean $F^A_j$ el fin de anestesia incluida su limpieza,
+$T^C_j$ el inicio efectivo de cirugía y $F^C_j$ el fin de cirugía incluida
+su limpieza. Definimos
+\begin{equation}
+  W_j=\max\{0,T^C_j-F^A_j\},\qquad
+  0\leq W_j\leq L_j,\qquad
+  C_{\max}=\max_{j\in J}F^C_j,
+  \label{eq:restricciones}
+\end{equation}
+donde $L_j$ es la espera máxima de la instancia. El límite se verifica como
+\emph{restricción dura}: una propuesta que lo viola no puede ser la mejor
+solución. Además se exige elegibilidad y ausencia de superposición de salas
+y profesionales. Cuando las etapas usan salas distintas, la sala y el
+profesional de anestesia permanecen ocupados hasta $T^C_j$; si comparten
+sala, ésta sigue ocupada durante la cirugía y limpieza. $W_j$ mide la espera
+entre etapas usada como \emph{proxy} de bloqueo, no toda la indisponibilidad
+de un quirófano.
 
-\bibitem[Saicooh(2026)]{saicooh2026}
-Saicooh. (2026). \emph{OII464\_Hospitales} [repositorio docente].
-\href{https://github.com/Saicooh/OII464_Hospitales}
-{github.com/Saicooh/OII464\_Hospitales}.
+La codificación de claves aleatorias genera preferencias de orden y de dos
+salas por paciente. Un decodificador repara esas preferencias: si el paciente
+preferido no es programable en ese momento, prueba los siguientes; para el
+elegido busca un par de salas factible que se aparte lo menos posible de las
+preferencias. El personal se asigna de manera voraz entre los elegibles.
+Por ello el movimiento solicitado puede convertirse en otra solución tras
+la reparación. El espacio realmente explorado depende de este decodificador
+y no comprende necesariamente todos los calendarios factibles. A diferencia
+del piloto inicial, no se fuerza equilibrio entre pabellones ni la misma sala
+para ambas etapas.
 
-\bibitem[Yin et~al.(2026)]{yin2026}
-Yin, D., Wang, J., Wang, Y. y Punnen, A. (2026).
-Multi-operator driven iterated tabu search for inter-hospital operating room
-scheduling. \emph{Journal of the Operational Research Society, 77}(9),
-2606--2626. \href{https://doi.org/10.1080/01605682.2025.2554741}
-{doi:10.1080/01605682.2025.2554741}.
+Minimizamos el criterio fijado antes de la validación,
+\begin{equation}
+  f(S)=C_{\max}+10^{-6}\sum_o t_o^{\mathrm{ini}}
+       +0{,}5\sum_{j\in J}W_j+1{,}4\max_{j\in J}W_j,
+  \label{eq:objetivo}
+\end{equation}
+donde $t_o^{\mathrm{ini}}$ es el inicio de reserva del recurso para
+cada operación, incluida la preparación. El término $10^{-6}$ desempata
+soluciones próximas. Reportamos $C_{\max}$ y las esperas por separado: una
+mejora de $f$ no implica que todas sus componentes disminuyan. La
+presentación docente considera también equilibrio de carga
+\parencite{lara2026}; lo excluimos porque una asignación desigual puede
+minimizar mejor el tiempo y la espera. Por tanto, $f$ no equivale al puntaje
+histórico del taller.
 
-\bibitem[Yu et~al.(2024)]{yu2024}
-Yu, H., Gao, K.-Z., Wu, N. y Suganthan, P.~N. (2024).
-Ensemble meta-heuristics and Q-learning for staff dissatisfaction constrained
-surgery scheduling and rescheduling.
-\emph{Engineering Applications of Artificial Intelligence, 134}, 108668.
-\href{https://doi.org/10.1016/j.engappai.2024.108668}
-{doi:10.1016/j.engappai.2024.108668}.
-\end{thebibliography}
+\subsection{Componente metaheurístico: búsqueda tabú}
+La búsqueda comienza desde la mejor de treinta soluciones evaluadas con el
+mismo planificador: FIFO, SPT, LPT y veintisiete generadas por claves
+aleatorias. Las reglas clásicas forman parte de la inicialización, de modo
+que superarlas al final está garantizado por construcción y no demuestra por
+sí solo el aporte de Tabu o D-MAB. En cada ronda se generan quince candidatos
+distintos mediante cinco tipos de movimiento: intercambiar dos pacientes,
+extraer e insertar uno en otra posición, cambiar su sala de anestesia,
+cambiar la de cirugía o cambiar ambas. Con probabilidad $0{,}65$ se elige un
+paciente entre los tres con mayor espera actual; en otro caso se elige del
+conjunto completo. El sesgo concentra parte de la búsqueda donde hay
+congestión, sin impedir exploración global.
+
+La memoria tabú conserva las últimas siete soluciones para desincentivar
+retornos. Una aspiración permite aceptar una solución tabú si mejora el
+mejor valor global. El estado local puede empeorar para salir de una zona de
+búsqueda, pero el mejor calendario observado se guarda por separado. Las
+tres políticas comparadas comparten exactamente estos movimientos, la
+reparación, las soluciones iniciales y un máximo de $3.030$ evaluaciones
+estrictas, incluidas las treinta iniciales.
+
+\subsection{Componente de aprendizaje y flujo}
+El aprendizaje se realiza \emph{online} en cada corrida, sin entrenamiento
+previo ni un modelo contextual. Antes de generar cada candidato, D-MAB
+escoge un movimiento $a$ mediante el índice UCB1
+\begin{equation}
+  a^*=\arg\max_a\left(\bar r_a+
+      \sqrt{\frac{2\ln(\sum_b n_b)}{n_a}}\right),
+  \label{eq:ucb}
+\end{equation}
+tras probar inicialmente cada brazo. Aquí $n_a$ es su número de observaciones
+y $\bar r_a$ su recompensa media. Después de evaluar el candidato se entrega
+una recompensa en $[0,1]$:
+\begin{equation}
+  r_a=\min\!\left\{1,
+    \frac{\max\{0,f(S_{\mathrm{local}})-f(S_{\mathrm{cand}})\}}
+         {\max\{1,0{,}02 f(S_{\mathrm{inicial}})\}}\right\}.
+  \label{eq:recompensa}
+\end{equation}
+La referencia local se fija al comienzo del lote de quince candidatos. Una
+propuesta duplicada recompensa con cero al bandido, aunque no consume una
+evaluación estricta. Page--Hinkley detecta caídas de recompensa por brazo
+con $\delta=0{,}01$ y umbral $\lambda=0{,}35$; cuando dispara, reinicia
+las estimaciones de \emph{todos} los movimientos, pero conserva la solución,
+la memoria tabú y el mejor valor. D-MAB aprende qué \emph{propuesta más
+reparación} fue útil; no diagnostica directamente un óptimo local.
+
+El flujo \emph{offline} consiste en verificar instancias, definir función
+objetivo, parámetros, baselines y semillas. En línea se repite: seleccionar
+movimiento, generar vecino, reparar, comprobar factibilidad, evaluar,
+actualizar bandido y estado tabú. Como ablación, UCB1 usa la misma selección
+sin Page--Hinkley; Tabu mixto selecciona uno de los cinco movimientos con
+probabilidad uniforme. Así la comparación principal estima el efecto de la
+selección aprendida y la ablación aísla el reinicio dinámico.
+
+\subsection{Datos, evaluación y alcance de la evidencia}
+El catálogo contiene doce instancias sintéticas en YAML: tres réplicas
+de cada tamaño, con 15, 20, 25 y 30 cirugías. Se verifican
+esquema y hashes, y se registran tamaño, salas, personal, duraciones y límites
+de espera. Son características descriptivas para análisis posterior, no
+entradas del bandido. Al crecer el número de cirugías también crecen los
+recursos, por lo que una curva agrupada por tamaño no aísla el efecto del
+número de pacientes. Ninguna instancia contiene datos clínicos reales.
+
+El piloto usó semillas $0$--$19$ para fijar la arquitectura. La validación
+emparejada usó semillas $20$--$39$ en \emph{las mismas doce instancias}: tres
+políticas por instancia y semilla, $720$ corridas y $2.181.600$
+evaluaciones estrictas presupuestadas. Comparamos diferencias por pareja
+instancia--semilla, además de medianas de objetivo, makespan, espera total y
+máxima, porcentaje factible, tiempo y curvas de convergencia ilustrativas.
+La mediana del tiempo por corrida fue cercana a $0{,}9$ segundos. Una
+reejecución de 36 corridas reconstruyó calendarios factibles y reprodujo los
+valores guardados. La comparación frente a FIFO, SPT y LPT se muestra como
+referencia constructiva, con la salvedad de que estas reglas ya siembran la
+búsqueda.
+
+\begin{table}[ht]
+  \centering
+  \caption{Comparación preliminar frente a Tabu mixto en 240 pares
+  instancia--semilla. Un cambio de hasta 0,25 min se considera similar.}
+  \label{tab:resultados}
+  \begin{tabular}{lrrr}
+    \toprule
+    Política & Mejora & Similar & Empeora\\
+    \midrule
+    Tabu + UCB1 & 105 & 34 & 101\\
+    Tabu + D-MAB & 106 & 39 & 95\\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+El efecto de D-MAB cambia de signo entre instancias y la mediana de sus doce
+diferencias medianas respecto de Tabu mixto es aproximadamente cero. La
+ablación directa tampoco muestra una ventaja consistente del reinicio
+Page--Hinkley. El bloqueo total mediano fue cero en todas las instancias y
+políticas; este catálogo discrimina poco en esa métrica y las diferencias
+provienen principalmente del makespan. Las semillas nuevas permiten estudiar
+la variación aleatoria del algoritmo \emph{dentro del catálogo conocido},
+pero no prueban generalización a instancias no vistas ni optimalidad global.
+Como siguiente prueba se requieren instancias sintéticas de estrés con más
+congestión y un conjunto de instancias reservado antes de ajustar parámetros.
+
+\noindent\textbf{Amenazas de validez y trabajo siguiente.} El presupuesto
+igualado cuenta llamadas al planificador estricto, no propuestas repetidas ni
+segundos de procesador. En efecto, una propuesta duplicada puede actualizar
+el bandido con recompensa cero sin gastar una evaluación, y la política
+uniforme no registra ese intento con la misma granularidad. La reparación
+puede modificar el movimiento escogido; por tanto, una preferencia aprendida
+por un brazo refleja la utilidad de proponerlo \emph{junto con} su reparación,
+no el efecto puro de una operación de vecindario. Una evaluación posterior
+deberá registrar tasas de reparación, elecciones y recompensas por operador,
+y comparar además presupuestos de tiempo. También se requieren intervalos de
+incertidumbre agrupados por instancia: las veinte semillas de una misma
+réplica comparten los datos y no constituyen veinte problemas independientes.
+Finalmente, nuevas instancias con esperas más exigentes permitirán observar
+si el componente aprendido aporta valor precisamente donde hay riesgo de
+bloqueo.
+
+\section{Conclusión}
+El problema exige coordinar secuencia, salas y personal sin violar la espera
+máxima entre anestesia y cirugía. La propuesta combina Tabu Search con D-MAB
+para escoger movimientos según la recompensa observada durante cada corrida.
+La validación inicial no demuestra superioridad general del controlador y
+señala que el catálogo actual apenas discrimina bloqueo. El valor de la
+arquitectura reside en que deja aislado y reproducible el efecto del
+aprendizaje; las siguientes entregas deberán probarlo en instancias no
+observadas y con mayor congestión.
+
+\clearpage
+\printbibliography[title={Referencias}]
 \end{document}

@@ -5,28 +5,28 @@ compilado prevalecen si hubiera alguna diferencia.
 
 | Requisito de la pauta | Ubicación en `main.tex` |
 |---|---|
-| Resumen de 150–200 palabras y palabras clave | Resumen inicial (dentro del rango) |
+| Resumen de 150–200 palabras y palabras clave | Resumen preliminar (195 palabras) |
 | Motivación, problema, pregunta y objetivo | Introducción |
-| Síntesis de 3–6 estudios relacionados | Último párrafo de la introducción (seis estudios) |
+| Síntesis de 3–6 estudios relacionados | Párrafo comparativo en la introducción (seis estudios) |
 | Gancho de la arquitectura híbrida | Propuesta metodológica: selección online de movimientos con D-MAB |
-| Componentes MH, ML, datos y orquestación offline/online | Sección «Componentes y orquestación» |
-| Métricas, baselines, ablación y criterio de parada | Sección «Plan de evaluación» |
+| Componentes MH, ML, datos y orquestación offline/online | Subsecciones 2.2, 2.3 y 2.4 |
+| Métricas, baselines, ablación y criterio de parada | Subsecciones 2.1–2.4 y cuadro 1 |
 | Conclusión y referencias | Secciones finales |
-| Extensión máxima de cinco páginas de contenido | Tres páginas de contenido más una de referencias en el PDF actual |
+| Extensión máxima de cinco páginas de contenido | Cinco páginas de contenido; portada institucional y referencias aparte |
 
-El formato procede de la plantilla institucional facilitada para el proyecto:
+El documento carga directamente `pucv_inf_2024.sty`, la portada de
+asignatura adaptada y el encabezado gráfico de la plantilla institucional:
 papel carta, fuente Times de 12 puntos, márgenes de 2,5 cm, interlineado
 sencillo, sangría de 1 cm, separación de 10 puntos entre párrafos y folio
-inferior derecho. Se extrajo únicamente el **formato**, sin reutilizar el
-contenido del informe anterior de GWO/BCO.
+inferior derecho. No reutiliza contenido del informe anterior de GWO/BCO.
 
 Para redactar se consultaron los tres documentos de la clase de metodología
 de la investigación (`DII9000_Metodología_de_la_Investigación__clase_1` y
 sus complementarios 1 y 2), la pauta `OII464__Entrega_1`, la presentación
 `Presentación_Hospitales__Optativo_` y el repositorio docente
 [`Saicooh/OII464_Hospitales`](https://github.com/Saicooh/OII464_Hospitales).
-Los materiales de clase no se redistribuyen aquí; las seis publicaciones
-citadas sí tienen su referencia y enlace persistente en `main.tex`.
+Los PDF de clase no se redistribuyen aquí; las seis publicaciones
+citadas sí tienen su referencia y enlace persistente en `referencias.bib`.
 
 El taller menciona cuatro instancias JSON, mientras este repositorio evalúa
 doce instancias YAML sintéticas disponibles en la copia local del caso. El

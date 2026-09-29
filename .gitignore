@@ -10,10 +10,13 @@ __pycache__/
 # Auxiliary files from LaTeX compilation; keep the source and final PDF.
 *.aux
 *.bbl
+*.bcf
 *.blg
 *.fdb_latexmk
 *.fls
 *.log
+*.nlo
 *.out
+*.run.xml
 *.synctex.gz
 *.toc
