@@ -28,10 +28,8 @@ tabú y selección adaptativa de movimientos** y lleva fecha **2 de octubre de
 2026**. El PDF tiene **siete páginas físicas**:
 portada, cinco páginas de contenido (resumen y cuatro de cuerpo) y una de
 referencias. La conclusión ocupa una página propia y menos de la mitad de ella.
-La portada se
-trata como preliminar institucional aparte del límite de cinco páginas de
-contenido de la pauta, según la decisión del equipo en este chat. El resumen
-contiene 194 palabras, dentro del rango de 150–200.
+La portada y las referencias se contabilizan aparte de las cinco páginas de
+contenido. El resumen contiene 194 palabras, dentro del rango de 150–200.
 
 ## Compilación
 
@@ -44,11 +42,7 @@ latexmk -pdf -interaction=nonstopmode -halt-on-error \
 ```
 
 La compilación manual equivalente es `pdflatex`, `biber` y dos pasadas más de
-`pdflatex`, siempre con el nombre de trabajo `Entrega_1_Tabu_DMAB`. En el
-Mac donde se generó el PDF, el lanzador universal de Biber 2.21 falló al
-extraer su arquitectura. Se ejecutó su binario ARM64 obtenido con `lipo`, y
-la secuencia manual terminó correctamente. Es una particularidad de esa
-instalación de TeX, no una dependencia del documento.
+`pdflatex`, siempre con el nombre de trabajo `Entrega_1_Tabu_DMAB`.
 
 El informe presenta la propuesta y una validación preliminar, con seis
 estudios relacionados. Los resultados no demuestran una mejora general de
