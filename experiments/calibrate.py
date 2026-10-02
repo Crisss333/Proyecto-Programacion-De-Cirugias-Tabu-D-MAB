@@ -24,21 +24,28 @@ from surgery_optim.tabu import TabuConfig, run_tabu
 
 ROOT = Path(__file__).resolve().parents[1]
 SIZES = (15, 20, 25, 30)
-EXPLORATION = (0.1, 0.03, 0.01)
-PH_LAMBDA = (0.35, 1.0, 3.0)
+EXPLORATION = (0.1, 0.02)
+PH_LAMBDA = (1.0, 10.0)
 FIELDS = ("variant", "policy", "memory", "exploration", "ph_lambda", "instance_id",
           "seed", "objective", "makespan_minutes", "dmab_restarts", "repaired_candidates",
           *(f"evaluated_{move}" for move in ("swap", "insert", "room_1", "room_2", "room_pair")))
 
 
 def variants() -> list[dict]:
+    """Tabu memory first (uniform policy), then C and lambda for the bandits.
+
+    A first pass ran the bandits with attribute memory; attribute memory
+    made uniform Tabu clearly worse, so the bandit grid was rerun with the
+    Entrega 1 solution memory. The completed attribute variants stay in
+    ``runs.csv`` as evidence.
+    """
     rows = [{"policy": "uniform", "memory": memory, "exploration": 1.0, "ph_lambda": 0.35}
             for memory in ("solution", "attribute")]
-    rows += [{"policy": "dmab", "memory": "attribute", "exploration": c, "ph_lambda": lam}
-             for c in EXPLORATION for lam in PH_LAMBDA]
-    rows.append({"policy": "dmab", "memory": "attribute", "exploration": 1.0,
+    rows.append({"policy": "dmab", "memory": "solution", "exploration": 1.0,
                  "ph_lambda": 0.35})
-    rows += [{"policy": "ucb", "memory": "attribute", "exploration": c, "ph_lambda": 0.35}
+    rows += [{"policy": "dmab", "memory": "solution", "exploration": c, "ph_lambda": lam}
+             for c in EXPLORATION for lam in PH_LAMBDA]
+    rows += [{"policy": "ucb", "memory": "solution", "exploration": c, "ph_lambda": 0.35}
              for c in EXPLORATION]
     for row in rows:
         row["variant"] = (f"{row['policy']}|{row['memory']}|C={row['exploration']}"
@@ -85,7 +92,28 @@ def report(output: Path) -> None:
             f"{int((diffs > 0.25).sum())} | "
             f"{np.median([float(row['dmab_restarts']) for row in rows]):.0f} | "
             f"{np.median([float(row['repaired_candidates']) for row in rows]):.0f} |")
-    lines += ["", "Gana/pierde usan el umbral práctico de 0,25 min de la Entrega 1.", ""]
+    lines += ["", "Gana/pierde usan el umbral práctico de 0,25 min de la Entrega 1.", "",
+              "## Decisión", "",
+              "Regla fijada antes de validar: se usa la memoria tabú y los parámetros "
+              "(C, λ) de la variante D-MAB con menor diferencia media; UCB1 usa el mismo C "
+              "para que la ablación solo quite Page–Hinkley.", "",
+              "* **Memoria tabú:** la memoria por atributo empeora a Tabu uniforme "
+              "(+3,5 min de media) y a todas las variantes D-MAB; se mantiene la memoria "
+              "de soluciones.",
+              "* **Escala C:** reducir C para que el bandit explote las recompensas "
+              "**empeora** el resultado (C = 0,02: +2,0 a +2,4 min). Con C = 1 el "
+              "controlador elige casi por turnos, pero esa diversidad de movimientos es "
+              "valiosa: la recompensa de mejora inmediata no predice bien qué movimiento "
+              "conviene seguir usando.",
+              "* **Page–Hinkley:** con C = 0,1, los reinicios (λ = 1, mediana 12 por "
+              "corrida) ayudan frente a no reiniciar (λ = 10 o UCB1), porque devuelven "
+              "exploración al controlador.",
+              "* **Elegida:** C = 0,1 y λ = 1,0 (media −0,22 min frente a −0,14 min de "
+              "C = 1, λ = 0,35). La diferencia entre ambas es menor que la variación entre "
+              "semillas, así que la calibración no anticipa una ventaja clara de D-MAB.",
+              "* **Movimientos reparados:** cerca de 900 de 3.000 candidatos (≈30 %) "
+              "salen del decodificador distintos de la propuesta, en todas las políticas.",
+              ""]
     (output / "CALIBRATION.md").write_text("\n".join(lines), encoding="utf-8")
 
 

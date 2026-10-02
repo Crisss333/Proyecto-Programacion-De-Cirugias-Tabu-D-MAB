@@ -32,8 +32,8 @@ class TabuConfig:
 
     ``exploration`` is the D-MAB/UCB1 scaling factor C. ``tabu_memory``
     selects what the tabu list stores: complete solution signatures
-    (``"solution"``, Entrega 1) or the job moved by the accepted candidate
-    (``"attribute"``). With ``common_random_numbers`` every policy draws the
+    (``"solution"``, default) or the job moved by the accepted candidate
+    (``"attribute"``, which performed worse in the calibration). With ``common_random_numbers`` every policy draws the
     same random numbers for the target job and the uniform move, so that
     bandit policies only differ from uniform Tabu in the move they apply.
     ``TabuConfig.entrega1()`` reproduces the configuration of Entrega 1.
@@ -44,9 +44,9 @@ class TabuConfig:
     candidates_per_batch: int = 15
     tabu_tenure: int = 7
     ph_delta: float = 0.01
-    ph_lambda: float = 0.35
-    exploration: float = 1.0
-    tabu_memory: TabuMemory = "attribute"
+    ph_lambda: float = 1.0
+    exploration: float = 0.1
+    tabu_memory: TabuMemory = "solution"
     common_random_numbers: bool = True
 
     def __post_init__(self) -> None:
@@ -63,7 +63,7 @@ class TabuConfig:
     def entrega1(cls, **overrides: Any) -> "TabuConfig":
         """Configuration used for the Entrega 1 results (seeds 0–39)."""
         settings: dict[str, Any] = {
-            "exploration": 1.0, "tabu_memory": "solution",
+            "exploration": 1.0, "ph_lambda": 0.35, "tabu_memory": "solution",
             "common_random_numbers": False,
         }
         settings.update(overrides)
