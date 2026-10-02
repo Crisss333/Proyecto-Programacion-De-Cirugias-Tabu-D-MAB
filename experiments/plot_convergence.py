@@ -1,6 +1,6 @@
 """Illustrative convergence traces for the first replica at each size.
 
-The fixed seed 20 was chosen before inspecting the validation outcomes.
+The fixed seed 40 (first validation seed) was chosen before inspecting the outcomes.
 These curves illustrate mechanism; statistical comparisons use all 240 pairs.
 """
 
@@ -30,9 +30,9 @@ LABELS = {"uniform": "Tabu mixto", "dmab": "Tabu + D-MAB", "ucb": "Tabu + UCB1"}
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--seed", type=int, default=20)
+    parser.add_argument("--seed", type=int, default=40)
     parser.add_argument("--output", type=Path,
-                        default=ROOT / "experiments/results/validation_20_39")
+                        default=ROOT / "experiments/results/validation_40_59")
     args = parser.parse_args()
     output = args.output.resolve()
     manifest = json.loads((output / "manifest.json").read_text(encoding="utf-8"))
@@ -41,7 +41,7 @@ def main() -> None:
     with (output / "runs.csv").open(newline="", encoding="utf-8") as stream:
         reference = {(row["instance_id"], int(row["seed"]), row["policy"]): row
                      for row in csv.DictReader(stream)}
-    config = TabuConfig(**manifest["config"])
+    config = TabuConfig.from_manifest(manifest["config"])
     fig, axes = plt.subplots(2, 2, figsize=(11, 7.5), layout="constrained")
     trace_rows = []
     for axis, size in zip(axes.flat, SIZES):

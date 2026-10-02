@@ -82,7 +82,7 @@ def audit(directory: Path) -> dict[str, int]:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("directory", type=Path, nargs="?",
-                        default=ROOT / "experiments/results/validation_20_39")
+                        default=ROOT / "experiments/results/validation_40_59")
     args = parser.parse_args()
     print(json.dumps(audit(args.directory.resolve()), indent=2))
 

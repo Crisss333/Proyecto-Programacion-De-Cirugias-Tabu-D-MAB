@@ -69,6 +69,17 @@ class TabuConfig:
         settings.update(overrides)
         return cls(**settings)
 
+    @classmethod
+    def from_manifest(cls, settings: dict[str, Any]) -> "TabuConfig":
+        """Rebuild a config stored in a results manifest.
+
+        Manifests written before ``tabu_memory`` existed (Entrega 1) are read
+        with the Entrega 1 defaults, so their runs can still be replayed.
+        """
+        if "tabu_memory" not in settings:
+            return cls.entrega1(**settings)
+        return cls(**settings)
+
 
 @dataclass(frozen=True, slots=True)
 class TabuResult:

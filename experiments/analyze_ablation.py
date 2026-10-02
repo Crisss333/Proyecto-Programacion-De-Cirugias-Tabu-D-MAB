@@ -139,7 +139,7 @@ def analyze(directory: Path) -> dict:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("directory", nargs="?", type=Path,
-                        default=ROOT / "experiments/results/validation_20_39")
+                        default=ROOT / "experiments/results/validation_40_59")
     args = parser.parse_args()
     print(json.dumps(analyze(args.directory.resolve()), indent=2, ensure_ascii=False))
 
