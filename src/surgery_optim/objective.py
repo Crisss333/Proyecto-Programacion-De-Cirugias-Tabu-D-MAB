@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from .model import InstanceContext
-from .scheduler import schedule_instance_solution
+from .scheduler import WAIT_TOLERANCE, schedule_instance_solution
 
 
 ALPHA = 1.0e-6
@@ -42,7 +42,7 @@ def quality(context: InstanceContext, solution: dict[str, Any]) -> Quality:
         first, second = by_job[job.job_id][1], by_job[job.job_id][2]
         surgery_start = second.start + max(second.transition, second.setup)
         wait = max(0.0, surgery_start - first.finish)
-        if wait > job.operations[1].max_wait + 1e-9:
+        if wait > job.operations[1].max_wait + WAIT_TOLERANCE:
             raise ValueError("max_wait violation")
         waits.append(wait)
     blocked = sum(waits)

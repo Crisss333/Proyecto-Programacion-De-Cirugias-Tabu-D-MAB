@@ -14,7 +14,6 @@ import hashlib
 import json
 import math
 import platform
-import statistics
 from dataclasses import asdict
 from pathlib import Path
 

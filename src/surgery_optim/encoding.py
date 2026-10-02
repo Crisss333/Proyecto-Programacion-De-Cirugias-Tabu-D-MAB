@@ -11,6 +11,7 @@ from typing import Any
 import numpy as np
 
 from .model import InstanceContext
+from .scheduler import greedy_feasible_schedule
 
 
 LOWER_BOUND = -5.0
@@ -67,51 +68,7 @@ def decode_feasible(position: np.ndarray, context: InstanceContext) -> dict[str,
     is returned as raw and will be rejected by the strict evaluator.
     """
     raw = decode_raw(position, context)
-    jobs = {job.job_id: job for job in context.jobs}
-    pending = list(raw["job_sequence_base"])
-    room_release = {room: 0.0 for room in context.rooms}
-    personnel_release = {
-        person: 0.0 for _, people in context.personnel_by_operation for person in people
-    }
-    assignments: dict[int, dict[int, str]] = {}
-    sequence: list[int] = []
-    while pending:
-        selected = None
-        for job_id in pending:
-            anesthesia, surgery = jobs[job_id].operations
-            preferred = raw["room_assignment"][job_id]
-            person_1 = min(anesthesia.eligible_personnel,
-                           key=lambda person: (personnel_release[person], person))
-            person_2 = min(surgery.eligible_personnel,
-                           key=lambda person: (personnel_release[person], person))
-            options = []
-            for room_1 in anesthesia.eligible_rooms:
-                setup_start = max(room_release[room_1], personnel_release[person_1])
-                anesthesia_finish = (
-                    setup_start + max(anesthesia.transition, anesthesia.setup)
-                    + anesthesia.duration + anesthesia.cleanup
-                )
-                for room_2 in surgery.eligible_rooms:
-                    surgery_setup = max(
-                        anesthesia_finish, room_release[room_2], personnel_release[person_2]
-                    )
-                    surgery_start = surgery_setup + max(surgery.transition, surgery.setup)
-                    if surgery_start - anesthesia_finish > surgery.max_wait + 1e-9:
-                        continue
-                    finish = surgery_start + surgery.duration + surgery.cleanup
-                    deviation = (room_1 != preferred[1]) + (room_2 != preferred[2])
-                    options.append((deviation, finish, room_1, room_2, surgery_start))
-            if options:
-                selected = (job_id, person_1, person_2, min(options))
-                break
-        if selected is None:
-            return raw
-        job_id, person_1, person_2, (_, finish, room_1, room_2, surgery_start) = selected
-        pending.remove(job_id)
-        sequence.append(job_id)
-        assignments[job_id] = {1: room_1, 2: room_2}
-        room_release[room_1] = finish if room_1 == room_2 else surgery_start
-        room_release[room_2] = finish
-        personnel_release[person_1] = surgery_start
-        personnel_release[person_2] = finish
-    return {"job_sequence_base": sequence, "room_assignment": assignments}
+    repaired = greedy_feasible_schedule(
+        context, raw["job_sequence_base"], raw["room_assignment"]
+    )
+    return raw if repaired is None else repaired
