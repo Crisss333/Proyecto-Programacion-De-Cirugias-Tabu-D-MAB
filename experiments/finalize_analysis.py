@@ -62,16 +62,19 @@ def main() -> None:
         paragraphs.append(f"| {label} | {pair_counts[0]} | {pair_counts[1]} | "
                           f"{pair_counts[2]} | {instance_counts[0]} / "
                           f"{instance_counts[1]} / {instance_counts[2]} |")
+    dmab_median = float(np.median([
+        np.median([float(by_key[instance, seed, "dmab"]["objective"])
+                   - float(by_key[instance, seed, "uniform"]["objective"])
+                   for seed in seeds]) for instance in instances]))
     paragraphs += [
-        "", "El efecto cambia de signo entre instancias; la mediana de las "
-        "doce diferencias medianas de D-MAB es aproximadamente **0 min**. "
-        "Estos datos no sostienen superioridad general sobre Tabu mixto. "
-        "La ablación directa tampoco identifica una ventaja consistente del "
-        "reinicio Page–Hinkley frente a UCB1.", "",
+        "", "La mediana de las doce diferencias medianas de D-MAB frente a Tabu "
+        f"mixto es **{dmab_median:+.2f} min** y el signo cambia entre instancias. "
+        "La lectura inferencial está en la sección de pruebas estadísticas "
+        "(Wilcoxon con corrección de Holm).", "",
         "Las 12 instancias de validación **ya se habían usado para elegir la "
-        "arquitectura**. Las semillas 20–39 son nuevas, pero no se ensayaron "
-        "instancias nuevas. La generalización fuera de este catálogo queda "
-        "pendiente.", "",
+        f"arquitectura**. Las semillas {seeds[0]}–{seeds[-1]} son nuevas, pero no "
+        "se ensayaron instancias nuevas. La generalización fuera de este catálogo "
+        "queda pendiente.", "",
         "FIFO, SPT y LPT forman parte de las 30 soluciones iniciales de Tabu. "
         "Por ello superar la mejor de esas reglas no es evidencia "
         "independiente del beneficio de Tabu o de D-MAB: Tabu comienza al "
@@ -84,7 +87,7 @@ def main() -> None:
     }
     paragraphs += [
         "Las medianas de bloqueo total son cero en todas las instancias y "
-        "políticas. Entre 240 calendarios finales por política, hubo bloqueo "
+        f"políticas. Entre {len(instances) * len(seeds)} calendarios finales por política, hubo bloqueo "
         f"positivo en {blocking_counts['uniform']} de Tabu mixto, "
         f"{blocking_counts['dmab']} de D-MAB y {blocking_counts['ucb']} de UCB1. "
         "Por ello este catálogo y decodificador discriminan poco en bloqueo; "

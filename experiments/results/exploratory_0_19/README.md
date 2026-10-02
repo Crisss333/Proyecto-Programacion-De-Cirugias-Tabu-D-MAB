@@ -8,7 +8,7 @@ política uniforme equivalente a `uniform` en el código nuevo;
 `candidate_runs.csv` incluye D-MAB y LinUCB, pero este proyecto final estudia
 D-MAB y la ablación UCB1 sin Page–Hinkley. Las rutas del manifiesto original
 son relativas a la antigua copia de trabajo; para reproducir el estudio
-**nuevo** se usa `../validation_20_39/manifest.json` y el código de este
+**nuevo** se usa `../validation_40_59/manifest.json` y el código de este
 repositorio.
 
 Estos resultados se usaron para escoger la arquitectura. Por ese motivo son
