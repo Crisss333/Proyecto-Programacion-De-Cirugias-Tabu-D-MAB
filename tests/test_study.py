@@ -174,7 +174,7 @@ def test_decoder_and_rules_respect_strict_scheduler_and_catalog_loads() -> None:
 
 def test_attribute_tabu_memory_is_reproducible_and_config_round_trips() -> None:
     context = load_instance(ROOT / "instances/standard/HOSP-STD-15-02.yaml")
-    config = TabuConfig(evaluation_budget=90, exploration=0.05)
+    config = TabuConfig(evaluation_budget=90, exploration=0.05, tabu_memory="attribute")
     first = run_tabu(context, 3, "dmab", config)
     second = run_tabu(context, 3, "dmab", config)
     assert first.final_quality == second.final_quality
