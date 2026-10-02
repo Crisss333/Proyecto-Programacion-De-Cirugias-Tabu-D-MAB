@@ -130,3 +130,56 @@ def test_anesthesia_room_and_personnel_remain_reserved_until_transfer() -> None:
                   "personnel_assignment": {1: {1: "unqualified"}}}
     with pytest.raises(IneligibleAssignmentError):
         schedule_instance_solution(context, bad_person)
+
+
+def test_exploration_scale_lets_small_rewards_drive_selection() -> None:
+    """With C=1 the UCB term swamps rewards of ~0.02; a small C exploits them."""
+    def pulls(exploration: float) -> int:
+        bandit = DynamicMultiArmedBandit(exploration=exploration, dynamic=False)
+        for _ in range(500):
+            arm = bandit.select()
+            bandit.update(arm, 0.04 if arm == "insert" else 0.0)
+        return bandit.total_choices["insert"]
+    assert pulls(1.0) < 200          # close to round-robin (100 each)
+    assert pulls(0.01) > 400         # the rewarding move dominates
+
+
+def test_neighbor_shares_random_stream_across_policies() -> None:
+    import random
+    from surgery_optim.tabu import neighbor
+    context = load_instance(ROOT / "instances/standard/HOSP-STD-15-01.yaml")
+    solution = construct_baseline(context, "fifo")
+    targets = set()
+    for move in (None, "swap", "insert", "room_1", "room_2", "room_pair"):
+        rng = random.Random(7)
+        _, target, applied = neighbor(solution, context, rng, [], move)
+        targets.add(target)
+        assert move is None or applied == move
+    assert len(targets) == 1
+
+
+def test_decoder_and_rules_respect_strict_scheduler_and_catalog_loads() -> None:
+    import numpy as np
+    from surgery_optim.encoding import decode_feasible
+    from surgery_optim.instances import load_catalog
+    catalog = load_catalog(ROOT / "instances/standard")
+    assert len(catalog) == 12
+    rng = np.random.default_rng(0)
+    for context in catalog:
+        dimension = len(context.jobs) * 3
+        for _ in range(5):
+            solution = decode_feasible(rng.uniform(-5, 5, dimension), context)
+            assert math.isfinite(quality(context, solution).objective)
+
+
+def test_attribute_tabu_memory_is_reproducible_and_config_round_trips() -> None:
+    context = load_instance(ROOT / "instances/standard/HOSP-STD-15-02.yaml")
+    config = TabuConfig(evaluation_budget=90, exploration=0.05)
+    first = run_tabu(context, 3, "dmab", config)
+    second = run_tabu(context, 3, "dmab", config)
+    assert first.final_quality == second.final_quality
+    assert first.repaired_candidates == second.repaired_candidates
+    legacy = TabuConfig.from_manifest({"population_size": 30, "evaluation_budget": 3030,
+                                       "candidates_per_batch": 15, "tabu_tenure": 7,
+                                       "ph_delta": 0.01, "ph_lambda": 0.35})
+    assert legacy == TabuConfig.entrega1()

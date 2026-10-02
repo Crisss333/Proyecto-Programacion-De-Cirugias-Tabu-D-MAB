@@ -21,7 +21,7 @@ ROOT = Path(__file__).resolve().parents[1]
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("directory", type=Path, nargs="?",
-                        default=ROOT / "experiments/results/validation_20_39")
+                        default=ROOT / "experiments/results/validation_40_59")
     args = parser.parse_args()
     directory = args.directory.resolve()
     manifest = json.loads((directory / "manifest.json").read_text(encoding="utf-8"))

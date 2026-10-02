@@ -19,7 +19,7 @@ PRACTICAL_THRESHOLD = 0.25  # minutes, 15 seconds
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("directory", nargs="?", type=Path,
-                        default=ROOT / "experiments/results/validation_20_39")
+                        default=ROOT / "experiments/results/validation_40_59")
     args = parser.parse_args()
     directory = args.directory.resolve()
     manifest = json.loads((directory / "manifest.json").read_text(encoding="utf-8"))

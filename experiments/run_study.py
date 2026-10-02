@@ -1,9 +1,10 @@
 """Reproducible paired study: mixed Tabu, Tabu+D-MAB, and UCB1 ablation.
 
 Run from the repository root, for example:
-    python -m experiments.run_study --seed-start 20 --seed-count 20
+    python -m experiments.run_study --seed-start 40 --seed-count 20
 Partial runs are saved after every solution and can be resumed with the same
-arguments. Previous exploratory seeds 0–19 are deliberately excluded.
+arguments. Seeds 0–19 were exploratory (0–5 also tuned C and lambda) and seeds
+20–39 validated the Entrega 1 configuration, so validation starts at 40.
 """
 
 from __future__ import annotations
@@ -24,6 +25,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import yaml
 
+from scipy.stats import wilcoxon
+
 from surgery_optim.bandit import MOVES
 from surgery_optim.baselines import construct_baseline
 from surgery_optim.instances import load_instance
@@ -39,7 +42,7 @@ RUN_FIELDS = (
     "instance_id", "instance_digest", "size", "seed", "policy",
     "initial_objective", "objective", "makespan_minutes", "blocked_minutes",
     "max_wait_minutes", "cross_room_jobs", "evaluations", "feasible_evaluations",
-    "runtime_seconds", "dmab_restarts",
+    "runtime_seconds", "dmab_restarts", "repaired_candidates",
     *(f"attempted_{move}" for move in MOVES),
     *(f"evaluated_{move}" for move in MOVES),
 )
@@ -73,7 +76,7 @@ def build_manifest(paths: list[Path], seeds: list[int], config: TabuConfig) -> d
         "encoding.py", "objective.py", "bandit.py", "tabu.py",
     )] + [ROOT / "experiments" / "run_study.py"]
     return {
-        "protocol_version": "1.0",
+        "protocol_version": "2.0",
         "status": "running",
         "source_repository": "https://github.com/Saicooh/OII464_Hospitales",
         "source_head_checked_in_prior_pilot": "ecd30e3dbc1962d856c09b3470d1870c3b139a9a",
@@ -91,8 +94,15 @@ def build_manifest(paths: list[Path], seeds: list[int], config: TabuConfig) -> d
         "objective": "Cmax + 1e-6*sum(operation starts) + 0.5*sum(waits) + 1.4*max(wait); no room-balance term",
         "feasibility": "strict per-surgery max_wait; free and independent anesthesia/surgery rooms; no forced balance",
         "reward": "max(0, local_before_batch - candidate)/max(1, 0.02*initial), clipped to 1; duplicate -> 0",
-        "bandit": "UCB1, with per-arm Page-Hinkley restart for dmab; no restart for ucb",
-        "rng": "NumPy default_rng(seed) for initial keys; random.Random(seed) for neighbors",
+        "bandit": "UCB1 with exploration scale C (config.exploration), per-arm "
+                  "Page-Hinkley restart for dmab; no restart for ucb",
+        "tuning": "C and lambda chosen on exploratory seeds 0-5 "
+                  "(experiments/results/calibration_0_5); validation seeds untouched",
+        "tabu_memory": "attribute = job moved by the accepted candidate",
+        "rng": "NumPy default_rng(seed) for initial keys; random.Random(seed) for neighbors; "
+               "common random numbers: every policy draws the uniform move",
+        "statistics": "two-sided Wilcoxon signed-rank on paired objective differences "
+                      "(zero_method='zsplit'), Holm correction within each family",
         "runtime_environment": {
             "python": platform.python_version(), "platform": platform.platform(),
             "numpy": np.__version__, "yaml": yaml.__version__,
@@ -104,6 +114,62 @@ def build_manifest(paths: list[Path], seeds: list[int], config: TabuConfig) -> d
 
 def save_manifest(path: Path, document: dict) -> None:
     path.write_text(json.dumps(document, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+
+COMPARISONS = (("dmab", "uniform"), ("ucb", "uniform"), ("dmab", "ucb"))
+
+
+def holm(p_values: list[float]) -> list[float]:
+    """Holm–Bonferroni adjusted p-values, in the input order."""
+    order = sorted(range(len(p_values)), key=lambda index: p_values[index])
+    adjusted = [0.0] * len(p_values)
+    running = 0.0
+    for rank, index in enumerate(order):
+        running = max(running, min(1.0, (len(p_values) - rank) * p_values[index]))
+        adjusted[index] = running
+    return adjusted
+
+
+def paired_test(differences: np.ndarray) -> float:
+    if np.all(np.abs(differences) <= 1e-9):
+        return 1.0
+    return float(wilcoxon(differences, zero_method="zsplit").pvalue)
+
+
+def statistical_tests(runs: list[dict], contexts) -> list[dict]:
+    """Wilcoxon signed-rank tests on objective differences (alternative − reference).
+
+    Family "global": the three comparisons over all instance–seed pairs.
+    Family "per_instance": the 12 instances × 3 comparisons. Holm correction
+    is applied within each family.
+    """
+    by_key = {(row["instance_id"], int(row["seed"]), row["policy"]): float(row["objective"])
+              for row in runs}
+    seeds = sorted({int(row["seed"]) for row in runs})
+    results: list[dict] = []
+    for family, groups in (
+        ("global", [("all", [c.instance_id for c in contexts])]),
+        ("per_instance", [(c.instance_id, [c.instance_id]) for c in contexts]),
+    ):
+        family_rows = []
+        for alternative, reference in COMPARISONS:
+            for label, instances in groups:
+                diffs = np.array([by_key[i, seed, alternative] - by_key[i, seed, reference]
+                                  for i in instances for seed in seeds])
+                family_rows.append({
+                    "family": family, "scope": label, "alternative": alternative,
+                    "reference": reference, "pairs": len(diffs),
+                    "mean_difference": float(np.mean(diffs)),
+                    "median_difference": float(np.median(diffs)),
+                    "wins": int(np.sum(diffs < -1e-9)),
+                    "ties": int(np.sum(np.abs(diffs) <= 1e-9)),
+                    "losses": int(np.sum(diffs > 1e-9)),
+                    "wilcoxon_p": paired_test(diffs),
+                })
+        for row, adjusted in zip(family_rows, holm([r["wilcoxon_p"] for r in family_rows])):
+            row["holm_p"] = adjusted
+        results.extend(family_rows)
+    return results
 
 
 def summaries_and_plot(output: Path, contexts, runs: list[dict], baselines: list[dict]) -> None:
@@ -146,6 +212,8 @@ def summaries_and_plot(output: Path, contexts, runs: list[dict], baselines: list
                 })
     write_csv(output / "summary.csv", summaries, tuple(summaries[0]))
     write_csv(output / "paired.csv", paired, tuple(paired[0]))
+    tests = statistical_tests(runs, contexts)
+    write_csv(output / "statistics.csv", tests, tuple(tests[0]))
 
     fig, axes = plt.subplots(1, 3, figsize=(16, 4.7), layout="constrained")
     metrics = (
@@ -177,7 +245,8 @@ def summaries_and_plot(output: Path, contexts, runs: list[dict], baselines: list
         axis.set_ylabel(title)
         axis.grid(alpha=.2)
     axes[0].legend(fontsize=8)
-    fig.suptitle("Validación: 12 instancias sintéticas, 20 semillas nuevas")
+    seed_list = sorted({int(row["seed"]) for row in runs})
+    fig.suptitle(f"Validación: 12 instancias sintéticas, semillas {seed_list[0]}–{seed_list[-1]}")
     fig.savefig(output / "comparison.png", dpi=170)
     fig.savefig(output / "comparison.pdf")
     plt.close(fig)
@@ -206,6 +275,28 @@ def summaries_and_plot(output: Path, contexts, runs: list[dict], baselines: list
         lines.extend(["", f"**{label} frente a Tabu mixto:** {wins} victorias, "
                       f"{ties} empates y {losses} derrotas en pares instancia-semilla. "
                       f"Mediana de las 12 diferencias medianas: {median(instance_medians):+.3f}."])
+    labels_text = {"dmab": "D-MAB", "ucb": "UCB1", "uniform": "Tabu mixto"}
+    lines.extend(["", "## Pruebas estadísticas", "",
+                  "Wilcoxon de rangos con signo, bilateral, sobre las diferencias emparejadas "
+                  "del objetivo (alternativa − referencia; negativo favorece a la alternativa). "
+                  "Holm corrige las tres comparaciones globales.", "",
+                  "| Comparación | Pares | Media dif. | Gana / empata / pierde | p | p Holm |",
+                  "|---|---:|---:|---:|---:|---:|"])
+    for row in tests:
+        if row["family"] != "global":
+            continue
+        lines.append(f"| {labels_text[row['alternative']]} vs {labels_text[row['reference']]} | "
+                     f"{row['pairs']} | {row['mean_difference']:+.3f} | {row['wins']} / "
+                     f"{row['ties']} / {row['losses']} | {row['wilcoxon_p']:.3g} | "
+                     f"{row['holm_p']:.3g} |")
+    significant = [row for row in tests if row["family"] == "per_instance"
+                   and row["holm_p"] < 0.05]
+    lines.extend(["", f"Por instancia (36 pruebas, Holm): {len(significant)} con p Holm < 0,05"
+                  + (": " + ", ".join(
+                      f"{row['scope']} ({labels_text[row['alternative']]} vs "
+                      f"{labels_text[row['reference']]}, media {row['mean_difference']:+.2f})"
+                      for row in significant) if significant else "") + ".",
+                  "Detalle en `statistics.csv`."])
     lines.extend([
         "", "Estos resultados son empíricos y específicos del catálogo sintético. "
         "No prueban optimalidad ni una mejora universal del controlador. "
@@ -218,17 +309,17 @@ def summaries_and_plot(output: Path, contexts, runs: list[dict], baselines: list
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--seed-start", type=int, default=20)
+    parser.add_argument("--seed-start", type=int, default=40)
     parser.add_argument("--seed-count", type=int, default=20)
     parser.add_argument("--budget", type=int, default=3030)
     parser.add_argument("--output", type=Path,
-                        default=ROOT / "experiments" / "results" / "validation_20_39")
+                        default=ROOT / "experiments" / "results" / "validation_40_59")
     args = parser.parse_args()
     if args.seed_count < 1 or args.seed_start < 0:
         parser.error("seed range must be nonempty and nonnegative")
     seeds = list(range(args.seed_start, args.seed_start + args.seed_count))
-    if any(seed < 20 for seed in seeds):
-        parser.error("validation seeds must start at 20 or later")
+    if any(seed < 40 for seed in seeds):
+        parser.error("validation seeds must start at 40 or later (0-39 already used)")
     config = TabuConfig(evaluation_budget=args.budget)
     paths = [ROOT / "instances" / "standard" / f"HOSP-STD-{size}-{replica:02d}.yaml"
              for size in SIZES for replica in (1, 2, 3)]
@@ -299,6 +390,7 @@ def main() -> None:
                         "feasible_evaluations": result.feasible_evaluations,
                         "runtime_seconds": result.runtime_seconds,
                         "dmab_restarts": result.dmab_restarts,
+                        "repaired_candidates": result.repaired_candidates,
                         **{f"attempted_{move}": result.attempted_choices[move] for move in MOVES},
                         **{f"evaluated_{move}": result.evaluated_choices[move] for move in MOVES},
                     }

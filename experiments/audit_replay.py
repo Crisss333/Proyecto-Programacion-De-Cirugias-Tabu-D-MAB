@@ -18,9 +18,9 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--seed", type=int, default=20)
+    parser.add_argument("--seed", type=int, default=40)
     parser.add_argument("--directory", type=Path,
-                        default=ROOT / "experiments/results/validation_20_39")
+                        default=ROOT / "experiments/results/validation_40_59")
     args = parser.parse_args()
     directory = args.directory.resolve()
     manifest = json.loads((directory / "manifest.json").read_text(encoding="utf-8"))
@@ -29,7 +29,7 @@ def main() -> None:
     with (directory / "runs.csv").open(newline="", encoding="utf-8") as stream:
         reference = {(row["instance_id"], int(row["seed"]), row["policy"]): row
                      for row in csv.DictReader(stream)}
-    config = TabuConfig(**manifest["config"])
+    config = TabuConfig.from_manifest(manifest["config"])
     evidence = []
     for path_text in manifest["instance_paths"]:
         context = load_instance(ROOT / path_text)
