@@ -6,7 +6,6 @@ import argparse
 import csv
 import hashlib
 import json
-from collections import Counter
 from pathlib import Path
 
 import numpy as np
@@ -33,7 +32,7 @@ def analyze(directory: Path) -> dict:
         raise ValueError("study must be completed before ablation analysis")
     runs = read_rows(directory / "runs.csv")
     summary = read_rows(directory / "summary.csv")
-    baselines = read_rows(directory / "baselines.csv")
+    read_rows(directory / "baselines.csv")
     by_key = {(row["instance_id"], int(row["seed"]), row["policy"]): row for row in runs}
     instances = sorted(manifest["instance_digests"])
     seeds = manifest["seeds"]

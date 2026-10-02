@@ -65,11 +65,14 @@ def test_constructive_rules_are_feasible_and_distinct_rooms_allowed() -> None:
 
 
 def test_historical_parity_for_known_seed_zero() -> None:
-    """Regression values from the exploratory 20-seed study, not its files."""
+    """Regression values from the exploratory 20-seed study, not its files.
+
+    ``TabuConfig.entrega1()`` must keep reproducing the Entrega 1 search.
+    """
     context = load_instance(ROOT / "instances/standard/HOSP-STD-15-01.yaml")
     expected = {"uniform": 145.5015295, "dmab": 140.5015795}
     for policy, target in expected.items():
-        result = run_tabu(context, 0, policy)
+        result = run_tabu(context, 0, policy, TabuConfig.entrega1())
         assert result.initial_objective == 147.5017585
         assert math.isclose(result.final_quality.objective, target, abs_tol=1e-9)
 
