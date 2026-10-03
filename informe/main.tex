@@ -38,9 +38,9 @@ respetando las restricciones de recursos y espera máxima. Su evaluación se
 realizará en instancias sintéticas mediante comparaciones y ablaciones con
 igual presupuesto, considerando calidad, bloqueo, tiempo y robustez para
 distinguir el aporte del aprendizaje del efecto de repetir la búsqueda.
-Dado que los resultados preliminares no demuestran superioridad general,
-se busca establecer en qué condiciones la adaptación ofrece mejoras
-reproducibles y si estas justifican su costo computacional.
+Con este diseño se busca identificar las condiciones en que la adaptación
+puede aportar mejoras reproducibles y determinar si estas justifican su
+costo computacional.
 
 \noindent\textbf{Palabras clave:} programación de cirugías; búsqueda tabú;
 selección adaptativa de operadores; aprendizaje en línea; bloqueo.
@@ -72,12 +72,14 @@ el fundamento histórico de D-MAB. Difieren en representación, restricciones
 y evaluación; queda por establecer el aporte de D-MAB al Tabu del caso
 docente de dos etapas con espera estricta, reparación y controles de cómputo.
 
-El objetivo es evaluar cuándo la selección adaptativa mejora calidad,
-tiempo o robustez frente a la uniforme. La arquitectura integra una
-metaheurística (MH) y aprendizaje automático (ML) en la \emph{evolución}:
-selección de operadores y vecinos \parencite{vega_taxonomia}.
-Tabu mantiene una trayectoria y utiliza instancias sintéticas docentes
-\parencite{saicooh2026}. Los pilotos no demuestran superioridad general.
+El objetivo de este proyecto es estudiar si la selección adaptativa de
+movimientos puede mejorar la calidad, el tiempo o la robustez de Tabu Search
+frente a la selección uniforme, integrando una metaheurística (MH) con
+aprendizaje automático (ML). Para ello, D-MAB orientará la generación de
+vecinos durante la \emph{evolución} de la trayectoria
+\parencite{vega_taxonomia}, y su aporte se evaluará con instancias sintéticas
+del repositorio oficial \parencite{saicooh2026}, mediante comparaciones con
+las mismas restricciones y presupuestos de búsqueda equivalentes.
 
 \clearpage
 \section{Propuesta metodológica}
@@ -96,7 +98,7 @@ limpieza; $W_j$ es la espera; $L_j$ su límite estricto, y $C_{\max}$ el
 makespan. Las reservas siguen el modelo docente; la primera sala permanece
 ocupada hasta el traslado si las salas difieren.
 
-Se usará el criterio existente, sin penalización por desequilibrio de salas:
+Se minimizará el siguiente criterio, sin penalización por desequilibrio de salas:
 \begin{equation}
  f(S)=C_{\max}+10^{-6}\sum_o t_o^{\mathrm{ini}}
         +0{,}5\sum_{j\in J}W_j+1{,}4\max_{j\in J}W_j.
@@ -186,12 +188,12 @@ y semillas, con presupuestos de evaluaciones iguales entre estrategias y,
 en pruebas separadas, igual tiempo máximo. La incertidumbre se agrupará por
 instancia, con contrastes corregidos por comparaciones múltiples.
 
-Los pilotos en 240 pares con semillas 60--79 no muestran ventaja general
-significativa; LinUCB tampoco justificó otro controlador. En 30 cirugías,
-la cartera tardó aproximadamente nueve segundos de media con tareas
-concurrentes; no se proyecta ese tiempo a 150 cirugías. Se usarán datos
-sintéticos sin identificadores clínicos. Los controles y registros abordarán
-el riesgo de atribuir a ML mejoras por mayor cómputo o por reparación.
+Se emplearán datos sintéticos sin identificadores clínicos y se registrarán
+el equipo, la configuración y el tiempo de ejecución de cada corrida,
+de modo que el costo computacional pueda analizarse al aumentar el tamaño
+de las instancias. Los controles y registros permitirán examinar el riesgo
+de atribuir al aprendizaje mejoras debidas a un mayor presupuesto o a la
+reparación de candidatos.
 
 \clearpage
 \section{Conclusión}
@@ -203,14 +205,14 @@ una metodología reproducible para estudiar si la adaptación contribuye a
 reducir el makespan y el bloqueo, manteniendo estrictas las restricciones
 del problema.
 
-Los antecedentes revisados respaldan esta línea de trabajo, aunque los
-pilotos todavía no permiten afirmar una ventaja general del aprendizaje.
-Por ello, la evaluación deberá separar su aporte del efecto de repetir
-la búsqueda y del presupuesto computacional, además de considerar la
-influencia de la reparación sobre los movimientos. Durante el semestre
-se ampliarán las pruebas a escenarios reservados y de mayor congestión,
-con el propósito de determinar cuándo conviene utilizar la propuesta,
-qué costo implica y cuáles son sus límites al aumentar la escala.
+La evaluación se organizará para distinguir el aporte del aprendizaje
+del efecto de repetir la búsqueda y del presupuesto computacional,
+evitando atribuir al controlador ventajas que correspondan a otros
+componentes. También se analizará cómo la reparación de candidatos
+influye en la utilidad observada de los movimientos. A lo largo del
+semestre se ampliarán las pruebas a escenarios reservados y de mayor
+congestión, con el propósito de determinar cuándo conviene utilizar la
+propuesta, qué costo implica y cuáles son sus límites al aumentar la escala.
 
 \clearpage
 \printbibliography[title={Referencias}]

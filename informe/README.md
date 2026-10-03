@@ -37,7 +37,7 @@ una portada institucional y una de referencias. La distribución es:
 | 6 | Conclusión en dos párrafos, de cinco oraciones y menos de media página. |
 | 7 | Referencias. |
 
-El resumen contiene **168 palabras**, dentro del rango de 150–200. Se explican
+El resumen contiene **165 palabras**, dentro del rango de 150–200. Se explican
 las variables debajo de las dos ecuaciones y la comparación se identifica como
 **Tabla 1**. El conteo de cinco páginas corresponde al contenido; la portada
 institucional y las referencias se contabilizan aparte.
@@ -53,8 +53,9 @@ deterministas; D-MAB aprende en línea dentro de una de las trayectorias.
 El informe contrasta cinco estudios de 2024–2026 y el fundamento de D-MAB
 de 2008 en un párrafo de síntesis. Presenta el plan de evaluación con igual
 presupuesto, referencias constructivas, dos Tabu independientes y ablación
-sin Page–Hinkley. Los pilotos motivan la investigación; no demuestran
-superioridad general del aprendizaje.
+sin Page–Hinkley. La entrega presenta la arquitectura y el protocolo previsto;
+el beneficio de la adaptación se plantea como una hipótesis que deberá
+contrastarse durante el semestre.
 
 ## Compilación
 

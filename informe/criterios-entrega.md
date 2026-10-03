@@ -5,13 +5,13 @@ compilado prevalecen si hubiera alguna diferencia.
 
 | Requisito de la pauta | Ubicación en `main.tex` |
 |---|---|
-| Resumen de 150–200 palabras y palabras clave | Resumen de 168 palabras y cinco palabras clave, en página propia |
+| Resumen de 150–200 palabras y palabras clave | Resumen de 165 palabras y cinco palabras clave, en página propia |
 | Motivación, problema, pregunta y objetivo | Introducción |
 | Síntesis de 3–6 estudios relacionados | Un párrafo comparativo: cinco estudios de 2024–2026 y fundamento de D-MAB de 2008 |
 | Gancho de la arquitectura híbrida | Selección online de movimientos con D-MAB en la evolución de Tabu; cartera fija con respaldo |
 | Componentes MH, ML, datos y orquestación offline/online | Subsecciones 2.2–2.5; reparto fijo separado del aprendizaje interno |
 | Métricas, baselines, ablación y criterio de parada | Subsecciones 2.1, 2.4 y 2.5; Tabla 1; 6.060 evaluaciones totales |
-| Datos sensibles, cómputo y riesgos metodológicos | Subsección 2.5: datos sintéticos, costo medido y controles de cómputo y reparación |
+| Datos sensibles, cómputo y riesgos metodológicos | Subsección 2.5: datos sintéticos, registro previsto del costo y controles de cómputo y reparación |
 | Conclusión de 3–5 oraciones, máximo media página | Cinco oraciones en dos párrafos y página propia, con limitaciones y pasos del semestre |
 | Extensión máxima de cinco páginas sin referencias | Cinco páginas de contenido; portada institucional y referencias aparte. Siete páginas físicas en total |
 
@@ -32,9 +32,9 @@ y el repositorio docente
 Los PDF de clase no se redistribuyen aquí; las seis publicaciones
 citadas sí tienen su referencia y enlace persistente en `referencias.bib`.
 
-El taller menciona cuatro instancias JSON, mientras este repositorio evalúa
-doce instancias YAML sintéticas del catálogo oficial. El informe declara
-este catálogo; no presenta los resultados como reproducción de los cuatro
-JSON de la presentación. Los resultados usan **semillas distintas en
-las mismas doce instancias**; son una validación de estabilidad en ese
-catálogo, no evidencia de generalización a instancias no vistas.
+El taller menciona cuatro instancias JSON, mientras que la propuesta parte
+de doce instancias sintéticas del catálogo oficial, distribuidas en archivos
+YAML. Las repeticiones con distintas semillas permitirán estudiar la
+variación de la búsqueda sobre un conjunto de datos fijo; se considerarán
+además instancias reservadas para examinar la generalización. Esta entrega
+presenta el diseño y el plan de evaluación, sin resultados experimentales.
