@@ -1,5 +1,22 @@
 # Protocolo de comparación de carteras
 
+## Estado y relación con la propuesta
+
+Este protocolo documenta el estudio de semillas 60–79, terminado y archivado
+en `experiments/results/portfolios_60_79/`. La arquitectura elegida para el
+semestre es la **cartera fija de Tabu uniforme y Tabu con D-MAB**, con 3.030
+evaluaciones por camino y selección de la mejor solución factible. Su
+implementación está en `surgery_optim.portfolio` y su flujo en
+[arquitectura-final.md](arquitectura-final.md).
+
+El ML seleccionado es D-MAB dentro de la trayectoria, aplicado a **evolución:
+selección de movimientos y generación de vecinos**. El reparto fijo y el
+mínimo final son deterministas. Los métodos LinUCB descritos abajo son
+alternativas experimentales; no forman parte de la arquitectura elegida.
+Los intervalos agrupados de este estudio incluyeron cero y no se demostró
+superioridad general a igual presupuesto. La decisión prioriza sencillez y
+conservación de la referencia, manteniendo dos Tabu como control.
+
 ## Pregunta
 
 ¿Conviene repartir el cómputo entre Tabu mixto y Tabu con D-MAB, o dedicarlo a
@@ -13,7 +30,7 @@ con una asignación fija?
   sus resultados. El catálogo ya se había usado en la selección de arquitectura.
 - Base: versión 2, `C=0,1`, `lambda=1`, memoria de siete soluciones, quince
   candidatos por lote, treinta soluciones iniciales y restricciones estrictas.
-- Presupuesto principal: 6.060 evaluaciones de candidatos, incluidas todas las
+- Presupuesto principal: 6.060 evaluaciones de búsqueda, incluidas todas las
   inicializaciones y pruebas. Se conserva Tabu de 3.030 como referencia menor.
 - Métrica principal: función objetivo existente, sin penalización por equilibrio.
   Se guardan makespan, espera, factibilidad y tiempo por separado.
@@ -29,9 +46,9 @@ con una asignación fija?
 |---|---|---|
 | Tabu prolongado | Un camino uniforme de 6.060 | No |
 | Dos reinicios de Tabu | Dos caminos uniformes de 3.030; devolver el mejor | No |
-| Cartera fija | Tabu y D-MAB de 3.030 cada uno; devolver el mejor | D-MAB dentro de su camino; el reparto es fijo |
-| Asignación aprendida | LinUCB reparte 6.060 entre los dos caminos | Online por bloques |
-| Asignación con respaldo | Completar Tabu de 3.030; LinUCB reparte el resto | Online por bloques |
+| Cartera fija (elegida) | Tabu uniforme y Tabu con D-MAB de 3.030 cada uno; devolver el mejor | D-MAB dentro de su camino; el reparto es fijo |
+| Asignación aprendida (archivada) | LinUCB reparte 6.060 entre los dos caminos | Online por bloques |
+| Asignación con respaldo (archivada) | Completar Tabu de 3.030; LinUCB reparte el resto | Online por bloques |
 
 Los dos caminos de la cartera Tabu+D-MAB comienzan con la misma semilla. Cada
 uno preserva su estado y memoria; su evolución aleatoria posterior puede
@@ -39,7 +56,7 @@ diferir. Dos reinicios uniformes usan `seed` y `seed+1.000.000`, incluidas sus
 inicializaciones aleatorias independientes. Esta diferencia se declara para
 evaluar el valor de combinar modos frente al valor de diversificar inicios.
 
-## Controlador contextual
+## Controlador contextual evaluado como alternativa
 
 LinUCB usa modelos lineales separados para los dos modos, regularización
 identidad y exploración `alpha=0,25`. Antes de cada bloque de 150 evaluaciones
@@ -65,6 +82,8 @@ La cartera fija y la asignación con respaldo conservan el resultado completo
 del Tabu de 3.030 de la misma semilla. Por construcción su objetivo final no
 puede empeorarlo. Esa protección utiliza cómputo adicional y no garantiza
 superar a Tabu que dispone de las 6.060 evaluaciones completas.
+La protección se refiere al objetivo combinado; no garantiza que cada
+componente, como makespan o espera, disminuya individualmente.
 
 Se distingue una mejora por el reparto aprendido de una mejora por repetir
 la búsqueda: se incluyen la cartera fija, dos reinicios y Tabu prolongado.
@@ -103,6 +122,23 @@ Los resultados y su manifiesto están en
 `experiments/results/portfolios_60_79/`. La retrospectiva 40–59 es descriptiva;
 no se mezcla con la validación de semillas 60–79.
 
+Para ejecutar solamente la arquitectura elegida:
+
+```bash
+python -m surgery_optim.portfolio \
+  --instance instances/standard/HOSP-STD-30-01.yaml \
+  --seed 60 --budget 6060 \
+  --output outputs/final/HOSP-STD-30-01-seed60.json
+```
+
+Los archivos de resultados archivados se mantienen intactos. Se exige
+coincidencia con sus hashes antes de reanudar; los cambios en una versión
+experimental deben usar otra carpeta de resultados.
+
 El estudio mantiene las reglas de personal y limpieza de la versión 2. Los
 tiempos se miden con tareas concurrentes y se interpretan descriptivamente;
 el presupuesto de evaluaciones es el control principal de cómputo.
+El tiempo de la cartera fija en este estudio es la suma de sus dos caminos;
+no se midió una ejecución simultánea interna de ambos. Las tareas de
+reparación y validación final consumen tiempo además de las evaluaciones
+contabilizadas en el presupuesto de búsqueda.

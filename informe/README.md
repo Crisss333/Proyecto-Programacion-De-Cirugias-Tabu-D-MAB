@@ -19,17 +19,41 @@ para que no aparezca numerada.
 
 Se mantienen papel carta, cuerpo Times de 12 puntos, márgenes de 2,5 cm,
 interlineado sencillo, sangría de 1 cm, 10 puntos entre párrafos, títulos del
-paquete institucional y folio inferior derecho. El resumen usa numeración
-romana y el cuerpo, arábiga. No se copiaron dedicatoria, índices ni texto del
-manual de la plantilla porque no forman parte de este informe de asignatura.
+paquete institucional y folio inferior derecho. El contenido usa numeración
+arábiga y la portada no lleva folio.
 
 El informe se titula **Programación de cirugías electivas mediante búsqueda
 tabú y selección adaptativa de movimientos** y lleva fecha **2 de octubre de
-2026**. El PDF tiene **siete páginas físicas**:
-portada, cinco páginas de contenido (resumen y cuatro de cuerpo) y una de
-referencias. La conclusión ocupa una página propia y menos de la mitad de ella.
-La portada y las referencias se contabilizan aparte de las cinco páginas de
-contenido. El resumen contiene 194 palabras, dentro del rango de 150–200.
+2026**. El PDF tiene **seis páginas físicas**: cinco antes de las referencias,
+contando la portada, y una de referencias. La distribución es:
+
+| Página física | Contenido |
+|---|---|
+| 1 | Portada institucional. |
+| 2 | Resumen, palabras clave e introducción con síntesis de estudios. |
+| 3 | Problema, restricciones, función objetivo y componentes MH y ML. |
+| 4 | Orquestación, datos, controles, evaluación y riesgos metodológicos. |
+| 5 | Conclusión en página propia, de cinco oraciones y menos de media página. |
+| 6 | Referencias. |
+
+El resumen contiene **182 palabras**, dentro del rango de 150–200. Se explican
+las variables debajo de las dos ecuaciones y la comparación se identifica como
+**Tabla 1**. La extensión respeta el máximo de cinco páginas sin referencias,
+incluso contando la portada institucional dentro de ese límite.
+
+## Alcance de la propuesta
+
+La componente ML interviene en la **evolución de la búsqueda**, seleccionando
+el tipo de movimiento con que Tabu genera cada vecino. La cartera final ejecuta
+Tabu uniforme y Tabu con D-MAB con 3.030 evaluaciones por camino y conserva
+el mejor calendario factible. Ese reparto fijo y la selección final son
+deterministas; D-MAB aprende en línea dentro de una de las trayectorias.
+
+El informe contrasta cinco estudios de 2024–2026 y el fundamento de D-MAB
+de 2008 en un párrafo de síntesis. Presenta el plan de evaluación con igual
+presupuesto, referencias constructivas, dos Tabu independientes y ablación
+sin Page–Hinkley. Los pilotos motivan la investigación; no demuestran
+superioridad general del aprendizaje.
 
 ## Compilación
 
@@ -44,9 +68,9 @@ latexmk -pdf -interaction=nonstopmode -halt-on-error \
 La compilación manual equivalente es `pdflatex`, `biber` y dos pasadas más de
 `pdflatex`, siempre con el nombre de trabajo `Entrega_1_Tabu_DMAB`.
 
-El informe presenta la propuesta y una validación preliminar, con seis
-estudios relacionados. Los resultados no demuestran una mejora general de
-D-MAB. Las fuentes docentes consultadas fueron la pauta OII464, los tres
-PDF de metodología de investigación, la presentación del problema y el
-[repositorio docente](https://github.com/Saicooh/OII464_Hospitales). Ninguno
-de esos originales se modificó.
+## Fuentes docentes
+
+Se consultaron la pauta OII464, los tres documentos de metodología de
+investigación, la presentación del problema, la taxonomía ML → MH del curso
+y el [repositorio docente](https://github.com/Saicooh/OII464_Hospitales).
+La bibliografía distingue estas fuentes de los seis estudios relacionados.
