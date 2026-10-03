@@ -24,22 +24,23 @@ arábiga y la portada no lleva folio.
 
 El informe se titula **Programación de cirugías electivas mediante búsqueda
 tabú y selección adaptativa de movimientos** y lleva fecha **2 de octubre de
-2026**. El PDF tiene **seis páginas físicas**: cinco antes de las referencias,
-contando la portada, y una de referencias. La distribución es:
+2026**. El PDF tiene **siete páginas físicas**: cinco de contenido,
+una portada institucional y una de referencias. La distribución es:
 
 | Página física | Contenido |
 |---|---|
 | 1 | Portada institucional. |
-| 2 | Resumen, palabras clave e introducción con síntesis de estudios. |
-| 3 | Problema, restricciones, función objetivo y componentes MH y ML. |
-| 4 | Orquestación, datos, controles, evaluación y riesgos metodológicos. |
-| 5 | Conclusión en página propia, de cinco oraciones y menos de media página. |
-| 6 | Referencias. |
+| 2 | Resumen y palabras clave, en página propia. |
+| 3 | Introducción y síntesis de estudios relacionados. |
+| 4 | Problema, restricciones, función objetivo y componentes MH y ML. |
+| 5 | Orquestación, datos, controles, evaluación y riesgos metodológicos. |
+| 6 | Conclusión en dos párrafos, de cinco oraciones y menos de media página. |
+| 7 | Referencias. |
 
-El resumen contiene **182 palabras**, dentro del rango de 150–200. Se explican
+El resumen contiene **168 palabras**, dentro del rango de 150–200. Se explican
 las variables debajo de las dos ecuaciones y la comparación se identifica como
-**Tabla 1**. La extensión respeta el máximo de cinco páginas sin referencias,
-incluso contando la portada institucional dentro de ese límite.
+**Tabla 1**. El conteo de cinco páginas corresponde al contenido; la portada
+institucional y las referencias se contabilizan aparte.
 
 ## Alcance de la propuesta
 

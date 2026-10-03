@@ -25,35 +25,39 @@
 \pagenumbering{arabic}
 
 \chapter*{Resumen}
-La programación de cirugías electivas requiere coordinar anestesia y cirugía
-con salas y profesionales compartidos. Una secuencia inadecuada prolonga la
-jornada y puede bloquear recursos durante la espera entre etapas. Las
-metaheurísticas permiten explorar calendarios, pero la utilidad de sus
-movimientos puede variar durante la búsqueda. Este proyecto propone integrar
-búsqueda tabú con un bandido multibrazo dinámico (D-MAB) que aprende en línea
-qué movimiento conviene proponer a partir de las mejoras observadas. La
-intervención del aprendizaje se ubica en la evolución de la búsqueda,
-mediante selección de operadores y generación de vecinos. Como respaldo,
-una cartera fija ejecutará Tabu con selección uniforme y Tabu con D-MAB,
-conservando el mejor calendario factible bajo un presupuesto total compartido.
-El modelo mantendrá estrictas las restricciones de recursos y de espera
-máxima. La evaluación distinguirá el aporte del aprendizaje del beneficio de
-repetir la búsqueda, mediante controles y ablaciones con igual presupuesto.
-Se medirán calidad, bloqueo, tiempo y robustez en instancias sintéticas.
-Los pilotos no demuestran superioridad general; la contribución esperada es
-identificar condiciones en que la adaptación aporta mejoras reproducibles
-y justificar su costo computacional.
+La programación de cirugías electivas exige coordinar las etapas de anestesia
+y cirugía, considerando la disponibilidad compartida de salas y profesionales
+para evitar que la espera entre procedimientos prolongue la jornada o bloquee
+recursos. Para abordar este problema, se propone integrar búsqueda tabú con
+un bandido multibrazo dinámico (D-MAB), que aprende durante la ejecución qué
+movimientos conviene utilizar y orienta así la generación de vecinos en la
+evolución de la búsqueda. La metodología incorpora una cartera con dos
+trayectorias, una de selección uniforme y otra guiada por D-MAB, que comparten
+un presupuesto total de evaluaciones y conservan el mejor calendario factible,
+respetando las restricciones de recursos y espera máxima. Su evaluación se
+realizará en instancias sintéticas mediante comparaciones y ablaciones con
+igual presupuesto, considerando calidad, bloqueo, tiempo y robustez para
+distinguir el aporte del aprendizaje del efecto de repetir la búsqueda.
+Dado que los resultados preliminares no demuestran superioridad general,
+se busca establecer en qué condiciones la adaptación ofrece mejoras
+reproducibles y si estas justifican su costo computacional.
 
 \noindent\textbf{Palabras clave:} programación de cirugías; búsqueda tabú;
 selección adaptativa de operadores; aprendizaje en línea; bloqueo.
 
+\clearpage
 \section{Introducción}
-El caso docente de OII464 programa pacientes previamente planificados en
-anestesia y cirugía, con preparación, transición, limpieza y recursos elegibles.
-Esperar la segunda sala puede retener la primera y su profesional. Se busca
-reducir el makespan y el bloqueo, respetando precedencia, espera máxima y
-disponibilidad \parencite{lara2026}. El makespan depende del calendario,
-no corresponde a sumar las duraciones fijas.
+La programación de cirugías dentro de un establecimiento de salud exige
+planificar el orden de los pacientes y coordinar la disponibilidad de
+quirófanos, anestesiólogos y cirujanos, junto con los tiempos de preparación,
+intervención y limpieza. Cuando la anestesia y la cirugía se realizan en
+etapas distintas, la espera por la segunda sala puede retener la primera
+y su profesional, prolongando la jornada y dificultando el uso de los
+recursos. En el problema considerado, se busca reducir el makespan,
+entendido como el tiempo de término de la última operación, y el bloqueo,
+respetando la precedencia, la espera máxima y la disponibilidad
+\parencite{lara2026}. A diferencia de la suma de duraciones fijas, el
+makespan depende de cómo se ordenan los pacientes y se asignan los recursos.
 
 La literatura distingue roles del aprendizaje: \textcite{akbarzadeh2024}
 predicen factibilidad en secuencias quirúrgicas multifase;
@@ -149,7 +153,8 @@ de Tabu de 3.030 evaluaciones, sin garantizar superar a Tabu de 6.060.
 La entrada ejecutable guarda ambos caminos y el calendario elegido.
 
 \subsection{Datos, controles y plan de evaluación}
-Se partirá de doce YAML oficiales: tres réplicas de 15, 20, 25 y 30 cirugías.
+Se trabajará con 12 instancias obtenidas del repositorio oficial del problema
+a estudiar, correspondientes a tres réplicas de 15, 20, 25 y 30 cirugías.
 Se comprobarán esquema, hashes, elegibilidad y unidades temporales. El tamaño,
 los recursos, las duraciones y la espera permitida son metacaracterísticas descriptivas;
 no son entradas contextuales de D-MAB. Las nuevas semillas no sustituyen una
@@ -189,20 +194,22 @@ el riesgo de atribuir a ML mejoras por mayor cómputo o por reparación.
 
 \clearpage
 \section{Conclusión}
-La programación de cirugías electivas exige coordinar salas y profesionales
-en dos etapas, reduciendo el makespan y el bloqueo sin incumplir la espera
-máxima. El proyecto estudiará si aprender qué movimientos proponer aporta
-calidad, eficiencia o robustez frente a una selección uniforme bajo las
-mismas restricciones y recursos de cómputo. La propuesta integra Tabu Search
-con D-MAB en la evolución de la búsqueda, mediante selección adaptativa de
-operadores y generación de vecinos, y añade una cartera fija que conserva
-el mejor calendario de Tabu uniforme y del camino aprendido. Los antecedentes
-y los pilotos fundamentan su factibilidad, pero la ausencia de una ventaja
-general demostrada exige separar el efecto del aprendizaje de repetir la
-búsqueda, controlar la reparación y evaluar escenarios reservados de mayor
-congestión. La contribución esperada es una adaptación reproducible al caso
-docente y evidencia sobre cuándo conviene utilizarla, cuánto cómputo requiere
-y qué limitaciones deben resolverse para ampliar la escala durante el semestre.
+La arquitectura propuesta sitúa el aprendizaje en la evolución de Tabu
+Search, al utilizar D-MAB para seleccionar los movimientos que generan
+nuevos vecinos y una cartera fija para conservar el mejor calendario
+factible entre el camino uniforme y el adaptativo. Con ello, se establece
+una metodología reproducible para estudiar si la adaptación contribuye a
+reducir el makespan y el bloqueo, manteniendo estrictas las restricciones
+del problema.
+
+Los antecedentes revisados respaldan esta línea de trabajo, aunque los
+pilotos todavía no permiten afirmar una ventaja general del aprendizaje.
+Por ello, la evaluación deberá separar su aporte del efecto de repetir
+la búsqueda y del presupuesto computacional, además de considerar la
+influencia de la reparación sobre los movimientos. Durante el semestre
+se ampliarán las pruebas a escenarios reservados y de mayor congestión,
+con el propósito de determinar cuándo conviene utilizar la propuesta,
+qué costo implica y cuáles son sus límites al aumentar la escala.
 
 \clearpage
 \printbibliography[title={Referencias}]
