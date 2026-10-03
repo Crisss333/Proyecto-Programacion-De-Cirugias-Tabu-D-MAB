@@ -54,3 +54,30 @@ documenta las pruebas previas que motivaron esta arquitectura. Esos datos no
 se incluyen en la validación nueva. La formulación completa de métricas,
 restricciones y ablation está en
 [`docs/metodologia-experimental.md`](../docs/metodologia-experimental.md).
+
+## Carteras y selección aprendida del camino
+
+```bash
+python -m experiments.compare_portfolios --workers 4
+python -m experiments.verify_portfolios
+python -m experiments.plot_portfolios
+python -m experiments.analyze_portfolio_learning
+```
+
+El [protocolo de carteras](../docs/protocolo-carteras.md) fija los métodos y
+parámetros antes de evaluar las semillas 60–79. Todas las alternativas reciben
+6.060 evaluaciones, excepto las referencias explícitas de 3.030. La cartera
+fija devuelve el mejor de Tabu y D-MAB; LinUCB decide qué camino continuar por
+bloques de 150 evaluaciones. La asignación con respaldo conserva el resultado
+completo del primer Tabu de 3.030.
+
+[`results/portfolios_60_79/`](results/portfolios_60_79/) contiene `runs.csv`,
+`summary.csv`, `instances_summary.csv`, `supplemental.csv`, `solutions.jsonl`,
+`decisions.csv`, `manifest.json`, `verification.json` y `comparison.png`/`.svg`.
+Las soluciones y las decisiones pueden revalidarse con `verify_portfolios`.
+La comparación estadística utiliza instancias como unidades y distingue la
+ventaja frente a Tabu de 3.030 de la ventaja con presupuesto equivalente.
+
+La [decisión de arquitectura](results/portfolios_60_79/DECISION.md) resume la
+recomendación y sus límites. `LEARNING.md` y `learning_added_value.csv`
+contienen comparaciones secundarias exploratorias del reparto aprendido.

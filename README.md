@@ -110,6 +110,28 @@ Las doce instancias son las mismas del piloto exploratorio; solo cambian las
 semillas. La validación comprueba robustez frente al azar de la búsqueda
 dentro de este catálogo, no desempeño en instancias aún no vistas.
 
+## Comparación de carteras con presupuesto equivalente
+
+El [estudio de carteras](experiments/results/portfolios_60_79/ANALYSIS.md)
+compara Tabu prolongado, dos reinicios de Tabu, una cartera fija Tabu+D-MAB y
+dos asignaciones aprendidas con LinUCB. Usa semillas nuevas 60–79 y **6.060
+evaluaciones por alternativa**, cobrando también inicializaciones y pruebas.
+La variante con respaldo conserva una ejecución completa de Tabu de 3.030;
+esa protección se distingue de superar a Tabu con el presupuesto completo.
+
+El [protocolo](docs/protocolo-carteras.md) explica estados, aprendizaje y
+controles. Los resultados incluyen soluciones revalidables, decisiones online
+y un gráfico de diferencias con incertidumbre agrupada por instancia.
+
+La [decisión de arquitectura](experiments/results/portfolios_60_79/DECISION.md)
+recomienda continuar con la **cartera fija Tabu+D-MAB y conservar el mejor**,
+sin añadir LinUCB por ahora. Con igual presupuesto, dos Tabu y el reparto
+aprendido redujeron el objetivo medio en aproximadamente 0,79; la cartera
+fija lo redujo en 0,66. **Ninguna ventaja general quedó demostrada**: los
+intervalos agrupados incluyen cero. Dos Tabu permanece como control para
+distinguir el aprendizaje de repetir la búsqueda. El respaldo protege el
+Tabu de 3.030, pero no garantiza superar al de 6.060.
+
 ## Organización
 
 | Ruta | Contenido |
@@ -121,6 +143,7 @@ dentro de este catálogo, no desempeño en instancias aún no vistas.
 | [`experiments/calibrate.py`](experiments/calibrate.py) | Calibración de memoria tabú, C y λ en semillas exploratorias. |
 | [`experiments/results/calibration_0_5/`](experiments/results/calibration_0_5/) | Calibración (semillas 0–5). |
 | [`experiments/results/validation_40_59/`](experiments/results/validation_40_59/) | Validación vigente con semillas 40–59. |
+| [`experiments/results/portfolios_60_79/`](experiments/results/portfolios_60_79/) | Carteras y asignación aprendida con presupuesto equivalente. |
 | [`experiments/results/validation_20_39/`](experiments/results/validation_20_39/) | Validación de la Entrega 1, archivada. |
 | [`experiments/results/exploratory_0_19/`](experiments/results/exploratory_0_19/) | Archivo de pilotos anteriores, sin combinarlo con la validación. |
 | [`tests/`](tests/) | Restricciones, factibilidad, reproducibilidad y paridad histórica. |
